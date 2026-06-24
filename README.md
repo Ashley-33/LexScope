@@ -36,6 +36,8 @@ python3 -m http.server 4198
 - **DeepSeek** 的接口返回 CORS 头,浏览器可直连。
 - **Tavily / Serper / Bing** 不允许浏览器跨域,需挂一个**无状态转发**(如 Cloudflare Workers / Vercel Edge,只透传 Key、不落库、回写 CORS 头),并把其地址填入「转发前缀」。
 
+转发用的 Worker 代码与部署步骤见 [`worker/`](worker/) 目录([worker.js](worker/worker.js) + [DEPLOY.md](worker/DEPLOY.md)):无需域名、Cloudflare 免费账号即可,网页控制台粘贴部署。部署后把分配的网址(末尾加 `/`)填入「设置 → 转发前缀」。
+
 ## 技术栈
 
 浏览器原生 ES Modules,无打包器、无后端。第三方库(mammoth / pdf.js / tesseract.js)按需从 CDN 动态加载。
