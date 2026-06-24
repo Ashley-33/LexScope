@@ -7,9 +7,9 @@
 ## 方式一:网页控制台(推荐,全程点鼠标)
 
 1. **注册 / 登录** Cloudflare:打开 <https://dash.cloudflare.com>,用邮箱注册免费账号。
-2. 左侧菜单 **Workers & Pages → Create application → Create Worker**。
-3. 取个名字,比如 `lexscope-proxy` → 点 **Deploy**(先把默认模板部署上去)。
-4. 点 **Edit code**,把本目录 [`worker.js`](worker.js) 的**全部内容**粘贴进去,覆盖默认代码 → 右上角 **Deploy**。
+2. 左侧菜单 **Workers & Pages → Create**。在「Ship something new」面板里,点 **「从 Hello World! 开始 / Start with Hello World!」**(不要点 Connect GitHub、Upload static files、想要部署 Pages —— 那几个是部署前端网页用的)。
+3. 给 Worker 命名,比如 `lexscope-proxy`,其余默认 → 点 **Deploy / 部署**(先把默认模板部署上去)。
+4. 部署完成后点 **Edit code / 编辑代码** 进编辑器,把默认代码**全部删除**,粘贴本目录 [`worker.js`](worker.js) 的**全部内容** → 右上角 **Deploy / 部署**。
 5. 复制分配给你的网址,形如:
    ```
    https://lexscope-proxy.你的子域.workers.dev
