@@ -51,6 +51,17 @@
         <input id="set-proxy" type="text" placeholder="留空则浏览器直连" />
       </label>
     </div>
+
+    <details class="key-help">
+      <summary><i class="ti ti-help-circle" aria-hidden="true"></i> 不知道 API Key 怎么获取?点这里看 1 分钟教程</summary>
+      <div class="key-help-body">
+        <p class="kh-line"><b>① AI 模型 Key(审查用)</b> — 默认用 DeepSeek:打开 <a href="https://platform.deepseek.com" target="_blank" rel="noopener">platform.deepseek.com</a> → 注册登录 → 左侧「API Keys」→ 点「创建 API key」→ 复制 <code>sk-</code> 开头的字符串,填到上方「AI 模型 API Key」。(需在 DeepSeek 账户里充值少量额度才能调用)</p>
+        <p class="kh-line"><b>② 联网搜索 Key(找法规用)</b> — 默认用 Tavily(注册即送免费额度):打开 <a href="https://app.tavily.com" target="_blank" rel="noopener">app.tavily.com</a> → 用邮箱或 Google 免费注册 → 登录后控制台首页就能看到 <code>tvly-</code> 开头的 API Key → 复制,填到「联网搜索 API Key」。</p>
+        <p class="kh-line kh-alt">想换其他搜索服务?<a href="https://serper.dev" target="_blank" rel="noopener">Serper</a>(谷歌结果,有免费额度)或 Bing Web Search(在微软 Azure 门户申请)也行,去各自后台拿 Key 后,记得把上方「联网搜索服务」切到对应项。</p>
+        <p class="kh-line kh-note"><i class="ti ti-shield-lock" aria-hidden="true"></i> 你填的所有 Key 只存在你自己的浏览器里,本站不上传、不保存。</p>
+      </div>
+    </details>
+
     <div class="settings-actions">
       <button id="btn-save-settings" class="btn btn-primary"><i class="ti ti-device-floppy" aria-hidden="true"></i> 保存</button>
       <span id="settings-saved" class="saved-tip" hidden>已保存</span>

@@ -81,6 +81,19 @@ h1, h2, h3 { font-weight: 600; margin: 0; }
 .settings-actions { margin-top: 16px; display: flex; align-items: center; gap: 12px; }
 .saved-tip { color: var(--success); font-size: 13px; }
 
+.key-help { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+.key-help summary { cursor: pointer; font-size: 13px; color: var(--link); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
+.key-help summary::-webkit-details-marker { display: none; }
+.key-help summary i { font-size: 16px; }
+.key-help[open] summary { margin-bottom: 6px; }
+.key-help-body { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 14px; }
+.kh-line { font-size: 13px; color: var(--text-2); line-height: 1.75; margin: 0 0 9px; }
+.kh-line:last-child { margin-bottom: 0; }
+.kh-line b { color: var(--text); }
+.kh-line code { background: var(--surface); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+.kh-note { color: var(--text-3); font-size: 12px; }
+.kh-note i { color: var(--accent-gold); vertical-align: -2px; margin-right: 3px; }
+
 input[type=text], input[type=password], select, textarea {
   font-family: inherit; font-size: 14px; color: var(--text);
   background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--radius-sm);
