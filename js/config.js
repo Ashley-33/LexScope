@@ -105,6 +105,32 @@ export function extractJSON(text) {
   return JSON.parse(t.slice(s, e + 1));
 }
 
+// 权威立法/监管来源域名(用于把联网检索限定在官方来源,过滤公司文件/新闻噪音)
+export const LAW_DOMAINS = [
+  'flk.npc.gov.cn',   // 国家法律法规数据库
+  'npc.gov.cn',
+  'gov.cn',
+  'csrc.gov.cn',      // 证监会
+  'nfra.gov.cn',      // 国家金融监督管理总局
+  'pbc.gov.cn',       // 人民银行
+  'court.gov.cn',     // 最高法
+  'samr.gov.cn',      // 市场监管总局
+  'mof.gov.cn',       // 财政部
+  'mohrss.gov.cn',    // 人社部(劳动法相关)
+];
+
+// 让 AI 先读内规、判断它受哪些"具体法律法规"约束,产出联网检索词。
+export const TOPIC_PROMPT = `你是中国法律合规检索专家。阅读用户提供的企业内部制度全文,判断它受哪些【现行有效的中国法律、行政法规、部门规章、监管指引】约束,生成用于联网检索这些"外规"的检索词。
+要求:
+- 输出 4-7 条检索词;每条尽量包含【具体法律/法规/规章名称】+ 关键主题词,例如「中华人民共和国公司法 董事 辞职」「上市公司治理准则 审计委员会」「中华人民共和国合同法 格式条款」。
+- 覆盖该制度涉及的不同法域(如公司法、证券法、合同法、民法典、金融监管办法、劳动法、个人信息保护法等),按相关度排序。
+- 只针对权威立法/监管文件,不要输出企业自身制度名、其他公司的文件名或新闻标题。
+- 严格只输出 JSON,无任何其它文字:{"queries":["...","..."]}`;
+
+export function buildTopicMessage(docText) {
+  return '企业内部制度全文:\n<<<\n' + (docText || '').slice(0, 6000) + '\n>>>\n\n请按要求只输出 JSON。';
+}
+
 export const RISK_LABELS = {
   conflict: '直接冲突', omission: '遗漏要求', ultra_vires: '越权超范围',
   ambiguous: '表述模糊', wording: '措辞优化', outdated: '过时引用',

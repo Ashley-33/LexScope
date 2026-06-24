@@ -135,6 +135,26 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 .paste-fallback summary { cursor: pointer; font-size: 13px; color: var(--text-2); }
 .paste-fallback textarea { margin: 10px 0; }
 
+.spin { animation: spin 1s linear infinite; display: inline-block; }
+
+/* 全自动流水线进度 */
+.run-status { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+.run-line { display: flex; align-items: center; gap: 9px; font-size: 14px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border); color: var(--text-2); }
+.run-line span { flex: 1; }
+.run-line.busy { color: var(--text); }
+.run-line.done { background: var(--success-bg); border-color: transparent; color: var(--success); }
+.run-line.err { background: var(--danger-bg); border-color: transparent; color: var(--danger); }
+.run-line i { font-size: 17px; flex-shrink: 0; }
+
+/* 审查依据清单(报告页顶部) */
+.basis { margin-bottom: 16px; background: var(--surface-2); border-radius: var(--radius); padding: 12px 16px; }
+.basis > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text); list-style: none; display: flex; align-items: center; gap: 7px; }
+.basis > summary::-webkit-details-marker { display: none; }
+.basis > summary i { color: var(--accent-gold); font-size: 16px; }
+.basis-list { margin: 10px 0 0; padding-left: 18px; }
+.basis-list li { font-size: 13px; line-height: 1.9; color: var(--text-2); }
+.basis-src { color: var(--text-3); font-size: 12px; margin-left: 4px; }
+
 /* ---- step2: search & regs ---- */
 .search-row { display: flex; gap: 10px; }
 .search-row input { flex: 1; }

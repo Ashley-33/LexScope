@@ -2,7 +2,7 @@
 // 设计契约见 README;仅依赖 config.js,不依赖 state.js。
 // 浏览器原生 ES module。
 
-import { SYSTEM_PROMPT, buildUserMessage, extractJSON } from './config.js';
+import { SYSTEM_PROMPT, buildUserMessage, extractJSON, TOPIC_PROMPT, buildTopicMessage } from './config.js';
 
 // 合法的风险类型集合(用于兜底统计 counts)
 const RISK_TYPES = ['conflict', 'omission', 'ultra_vires', 'ambiguous', 'wording', 'outdated'];
@@ -65,6 +65,45 @@ export async function runReview({ docText, regs, mode, settings, round = 1 }) {
   }
 
   return normalize(obj, regList, round);
+}
+
+/**
+ * 让模型读内规,提取用于联网检索"外规"的检索词(法律法规名 + 主题)。
+ * @param {Object} p
+ * @param {string} p.docText   内规全文
+ * @param {Object} p.settings  { modelEndpoint, modelName, modelKey, proxy }
+ * @returns {Promise<string[]>} 4-7 条检索词;失败时返回 [](由调用方兜底)
+ */
+export async function extractQueries({ docText, settings }) {
+  const s = settings || {};
+  const modelKey = (s.modelKey || '').trim();
+  if (!modelKey) throw new Error('未配置 AI 模型 API Key,请在「设置」中填写');
+  const url = s.proxy ? s.proxy + (s.modelEndpoint || '') : (s.modelEndpoint || '');
+  const messages = [
+    { role: 'system', content: TOPIC_PROMPT },
+    { role: 'user', content: buildTopicMessage(docText) },
+  ];
+  const base = { model: s.modelName || '', temperature: 0.2, max_tokens: 700, messages };
+
+  let content;
+  try {
+    content = await callModel(url, modelKey, { ...base, response_format: { type: 'json_object' } });
+  } catch (err) {
+    if (err && err._retryWithoutResponseFormat) {
+      content = await callModel(url, modelKey, base);
+    } else {
+      throw err;
+    }
+  }
+
+  let obj;
+  try {
+    obj = extractJSON(content);
+  } catch (e) {
+    return [];
+  }
+  const qs = Array.isArray(obj && obj.queries) ? obj.queries : [];
+  return qs.filter((q) => typeof q === 'string' && q.trim()).map((q) => q.trim()).slice(0, 7);
 }
 
 /**

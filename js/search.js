@@ -31,10 +31,12 @@ async function safeFetch(url, opts, provider) {
 // query    搜索关键词
 // settings getSettings() 返回的对象
 // 返回:按 url 去重、最多 8 条的结果数组
-export async function searchRegulations(query, settings) {
+export async function searchRegulations(query, settings, opts) {
   const provider = (settings && settings.searchProvider) || 'tavily';
   const key = (settings && settings.searchKey) || '';
   const proxy = (settings && settings.proxy) || '';
+  // 可选:把结果限定在这些权威来源域名(过滤公司文件/新闻噪音)
+  const includeDomains = (opts && Array.isArray(opts.includeDomains)) ? opts.includeDomains : [];
 
   if (!key) {
     throw new Error('未配置联网搜索 API Key,请在「设置」中填写');
@@ -58,6 +60,7 @@ export async function searchRegulations(query, settings) {
         search_depth: 'advanced',
         max_results: 8,
         include_raw_content: true,
+        ...(includeDomains.length ? { include_domains: includeDomains } : {}),
       }),
     }, provider);
     if (!resp.ok) {

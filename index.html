@@ -72,9 +72,7 @@
   <nav class="stepper" aria-label="流程步骤">
     <div class="si on" data-s="1"><span class="dot">1</span><span class="lbl">上传制度</span></div>
     <span class="bar"></span>
-    <div class="si" data-s="2"><span class="dot">2</span><span class="lbl">网络选规</span></div>
-    <span class="bar"></span>
-    <div class="si" data-s="3"><span class="dot">3</span><span class="lbl">审查报告</span></div>
+    <div class="si" data-s="2"><span class="dot">2</span><span class="lbl">审查报告</span></div>
   </nav>
 
   <main>
@@ -87,54 +85,27 @@
         <input id="file-input" type="file" accept=".docx,.pdf,.png,.jpg,.jpeg,.webp,image/*" hidden />
       </div>
       <div id="file-status" class="file-status" hidden></div>
-      <p class="note"><i class="ti ti-info-circle" aria-hidden="true"></i> 本平台不自建法规库。下一步由您的 AI 联网检索权威来源,所有引用法条均附原文链接供核对。密钥在右上角「设置」中配置。</p>
+      <p class="note"><i class="ti ti-info-circle" aria-hidden="true"></i> 点「开始审查」后,AI 会自动判断该制度受哪些法律法规约束 → 只在权威立法/监管来源中联网检索 → 逐条审查,全程无需人工挑选。密钥在右上角「设置」中配置。</p>
       <details class="paste-fallback">
         <summary>或直接粘贴制度文本</summary>
         <textarea id="paste-text" placeholder="将制度全文粘贴到此处……"></textarea>
         <button id="btn-use-paste" class="btn">使用此文本</button>
       </details>
+
+      <!-- 自动流水线进度 -->
+      <div id="run-status" class="run-status" hidden></div>
     </section>
 
-    <!-- 步骤2:网络选规 -->
+    <!-- 步骤2:审查报告(report.js 渲染) -->
     <section id="step-2" class="step" data-step="2" hidden>
-      <div class="search-row">
-        <input id="search-query" type="text" placeholder="检索关键词,如:董事 辞职 表决 公司治理" />
-        <button id="btn-search" class="btn btn-primary"><i class="ti ti-world-search" aria-hidden="true"></i> 联网检索</button>
-      </div>
-      <div id="search-status" class="search-status"></div>
-      <div id="reg-list" class="reg-list"></div>
-
-      <button id="btn-manual-toggle" class="btn btn-block"><i class="ti ti-plus" aria-hidden="true"></i> 手动添加外规(库内/搜索未覆盖时粘贴条文)</button>
-      <div id="manual-form" class="manual-form" hidden>
-        <div class="manual-row">
-          <input id="manual-name" type="text" placeholder="法规名称,如《公司法》" />
-          <input id="manual-clause" type="text" placeholder="条款号,如 第七十条" />
-        </div>
-        <input id="manual-url" type="text" placeholder="来源链接(可选)" />
-        <textarea id="manual-quote" placeholder="粘贴条文原文(必填,用于审查比对)"></textarea>
-        <button id="btn-manual-add" class="btn">添加到清单</button>
-      </div>
-
-      <div class="step2-foot">
-        <label class="mode-toggle">审查模式
-          <select id="mode-select">
-            <option value="fast">快速(只挑风险点)</option>
-            <option value="full">全文体检(逐条对照·更费 token)</option>
-          </select>
-        </label>
-        <span class="sel-count">已选 <b id="sel-count">0</b> 条外规</span>
-      </div>
-    </section>
-
-    <!-- 步骤3:审查报告(report.js 渲染) -->
-    <section id="step-3" class="step" data-step="3" hidden>
+      <div id="review-basis"></div>
       <div id="report-root"></div>
     </section>
   </main>
 
   <nav class="nav">
-    <button id="btn-prev" class="btn"><i class="ti ti-arrow-left" aria-hidden="true"></i> 上一步</button>
-    <button id="btn-next" class="btn btn-primary">去联网选规 <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+    <button id="btn-prev" class="btn"><i class="ti ti-arrow-left" aria-hidden="true"></i> 重新上传</button>
+    <button id="btn-next" class="btn btn-primary"><i class="ti ti-player-play" aria-hidden="true"></i> 开始审查</button>
   </nav>
 
   <!-- 全局提示 -->
