@@ -297,9 +297,25 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 /* ---- 范本式三栏对照表 findings ---- */
 .findings-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
 .finding { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
-.finding.adopted { opacity: .7; }
-.finding.ignored { opacity: .45; }
+.finding[data-decision="adopted"] { opacity: .92; }
+.finding[data-decision="ignored"] { opacity: .5; }
 .finding .fcap { padding: 8px 14px; }
+.fcap-title { flex: 1; }
+.fcap-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+/* 采纳/忽略盖章(白底描边,印在彩色标题条上,似橡皮章)*/
+.fstamp { display: none; align-items: center; gap: 4px; border: 1.5px solid currentColor; border-radius: 5px; padding: 1px 9px; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+.fstamp i { font-size: 14px; }
+.finding[data-decision="adopted"] .s-adopt { display: inline-flex; }
+.finding[data-decision="ignored"] .s-ignore { display: inline-flex; }
+.factions .adopt.active { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+.factions .fignore.active { background: var(--surface-2); color: var(--text-2); border-color: var(--border-2); }
+/* 处置汇总 */
+.decision-summary { background: var(--surface-2); border-radius: var(--radius-sm); padding: 9px 14px; font-size: 13px; color: var(--text-2); margin-bottom: 14px; display: flex; align-items: center; gap: 7px; }
+.decision-summary i { color: var(--primary); font-size: 15px; }
+.decision-summary b { color: var(--text); }
+.ds-a { color: var(--success); font-weight: 500; }
+.ds-i { color: var(--text-3); }
+.ds-p { color: var(--warning); }
 .finding-grid { display: grid; grid-template-columns: 1.1fr 1.3fr 1fr; }
 .fg-col { padding: 13px 15px; border-right: 1px solid var(--border); min-width: 0; }
 .fg-col:last-child { border-right: none; }

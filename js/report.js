@@ -50,9 +50,13 @@ function findingBlock(f) {
   const head = esc(typeLabel) + ' · ' + esc(f.internal_clause_no || '') + (f.title ? ' · ' + esc(f.title) : '');
   const concl = '<div class="fg-text">' + esc(f.problem || '') + '</div>' +
     (f.suggestion ? '<div class="fg-sugg"><span class="fg-sugg-cap">修改建议</span>' + esc(f.suggestion) + '</div>' : '');
-  return '<div class="finding" id="card-' + esc(f.id) + '">' +
-    '<div class="fcap sev-' + sv + '"><span>' + head + '</span>' +
-      '<span class="conf">置信度:' + esc(confLabel(f.confidence)) + (f.need_human_review ? ' · 待复核' : '') + '</span></div>' +
+  return '<div class="finding" id="card-' + esc(f.id) + '" data-decision="' + esc(f.decision || '') + '">' +
+    '<div class="fcap sev-' + sv + '"><span class="fcap-title">' + head + '</span>' +
+      '<span class="fcap-right">' +
+        '<span class="fstamp s-adopt"><i class="ti ti-stamp" aria-hidden="true"></i> 已采纳</span>' +
+        '<span class="fstamp s-ignore"><i class="ti ti-ban" aria-hidden="true"></i> 已忽略</span>' +
+        '<span class="conf">置信度:' + esc(confLabel(f.confidence)) + (f.need_human_review ? ' · 待复核' : '') + '</span>' +
+      '</span></div>' +
     '<div class="finding-grid">' +
       '<div class="fg-col fg-internal"><div class="fg-h">受审文本原文</div>' +
         (f.internal_clause_no ? '<div class="fg-clause">' + esc(f.internal_clause_no) + '</div>' : '') +
@@ -106,6 +110,8 @@ export function renderReport(root, result, ctx) {
   html += '<div class="fingerprint"><i class="ti ti-fingerprint" aria-hidden="true"></i> ' +
     esc(ctx.fingerprint || '') + ' · ' + esc(ctx.modelName || '') + ' · 第' + esc(ctx.round || 1) + '轮 · ' +
     esc(ctx.fileName || '') + '</div>';
+  // 处置汇总(采纳/忽略留痕,随报告导出)
+  if (findings.length) html += '<div id="decision-summary" class="decision-summary"></div>';
   // 导出按钮(app.js 会替换为「下载 PDF」)
   html += '<div class="report-actions"><button class="btn btn-primary">导出 PDF</button></div>';
   // 发现
@@ -132,22 +138,40 @@ function metric(k, v) {
   return '<div class="metric"><div class="k">' + esc(k) + '</div><div class="v">' + esc(v) + '</div></div>';
 }
 
+function updateDecisionSummary(root, findings) {
+  const el = root.querySelector('#decision-summary');
+  if (!el) return;
+  const n = (findings || []).length;
+  let a = 0, ig = 0;
+  (findings || []).forEach((f) => { if (f && f.decision === 'adopted') a++; else if (f && f.decision === 'ignored') ig++; });
+  const pending = n - a - ig;
+  el.innerHTML = '<i class="ti ti-clipboard-check" aria-hidden="true"></i> 处置进度:共 <b>' + n + '</b> 条 · ' +
+    '<span class="ds-a">已采纳 ' + a + '</span> · <span class="ds-i">已忽略 ' + ig + '</span> · <span class="ds-p">待定 ' + pending + '</span>';
+}
 function bind(root, ctx, findings) {
   root.querySelectorAll('.finding').forEach((card) => {
     const id = card.id.replace(/^card-/, '');
+    const f = (findings || []).find((x) => x && x.id === id);
     const adopt = card.querySelector('.adopt');
-    if (adopt) adopt.addEventListener('click', () => {
-      adopt.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> 已采纳';
-      adopt.classList.add('done');
-      adopt.disabled = true;
-      card.classList.add('adopted');
-      safe(ctx.onAdopt, id);
-    });
+    const ignore = card.querySelector('.fignore');
+    const apply = (d) => {
+      if (f) f.decision = d || undefined;
+      card.setAttribute('data-decision', d || '');
+      if (adopt) adopt.classList.toggle('active', d === 'adopted');
+      if (ignore) ignore.classList.toggle('active', d === 'ignored');
+      updateDecisionSummary(root, findings);
+      safe(d === 'ignored' ? ctx.onIgnore : ctx.onAdopt, id);
+    };
+    // 初始按钮高亮(若已有决定)
+    const cur = f && f.decision;
+    if (adopt) adopt.classList.toggle('active', cur === 'adopted');
+    if (ignore) ignore.classList.toggle('active', cur === 'ignored');
+    if (adopt) adopt.addEventListener('click', () => apply((f && f.decision === 'adopted') ? '' : 'adopted'));
+    if (ignore) ignore.addEventListener('click', () => apply((f && f.decision === 'ignored') ? '' : 'ignored'));
     const ed = card.querySelector('.fedit');
     if (ed) ed.addEventListener('click', () => safe(ctx.onEdit, id));
-    const ig = card.querySelector('.fignore');
-    if (ig) ig.addEventListener('click', () => { card.classList.add('ignored'); safe(ctx.onIgnore, id); });
   });
+  updateDecisionSummary(root, findings);
   root.querySelectorAll('.gap-card').forEach((gc) => {
     const btn = gc.querySelector('.gap-re');
     if (!btn) return;
