@@ -291,6 +291,32 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 .factions .btn { padding: 6px 12px; font-size: 13px; }
 .factions .adopt.done { color: var(--success); border-color: var(--success); }
 
+/* ---- 范本式三栏对照表 findings ---- */
+.findings-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
+.finding { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+.finding.adopted { opacity: .7; }
+.finding.ignored { opacity: .45; }
+.finding .fcap { padding: 8px 14px; }
+.finding-grid { display: grid; grid-template-columns: 1.1fr 1.3fr 1fr; }
+.fg-col { padding: 13px 15px; border-right: 1px solid var(--border); min-width: 0; }
+.fg-col:last-child { border-right: none; }
+.fg-h { font-size: 12px; color: var(--text-3); font-weight: 600; margin-bottom: 8px; letter-spacing: .03em; }
+.fg-clause { font-size: 13px; color: var(--text); font-weight: 500; margin-bottom: 6px; }
+.fg-text { font-size: 13px; line-height: 1.75; color: var(--text-2); overflow-wrap: anywhere; }
+.fg-hl { background: #fbe0dc; color: #7a2018; padding: 1px 2px; border-radius: 2px; }
+.fg-sugg { margin-top: 10px; border-left: 3px solid var(--success); background: var(--success-bg); padding: 7px 11px; font-size: 12px; color: #0c4a30; line-height: 1.65; }
+.fg-sugg-cap { display: block; font-weight: 600; color: var(--success); font-size: 11px; margin-bottom: 3px; }
+.fg-cite { font-size: 13px; color: var(--text); font-weight: 500; line-height: 1.6; overflow-wrap: anywhere; }
+.fg-quote { font-size: 12px; color: var(--text-2); line-height: 1.7; margin: 5px 0 7px; overflow-wrap: anywhere; }
+.fg-ext .lk { white-space: normal; overflow-wrap: anywhere; }
+.ov-break { font-size: 12px; color: var(--text-3); margin-top: 6px; line-height: 1.5; }
+.gaps { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+@media (max-width: 760px) {
+  .finding-grid { grid-template-columns: 1fr; }
+  .fg-col { border-right: none; border-bottom: 1px solid var(--border); }
+  .fg-col:last-child { border-bottom: none; }
+}
+
 /* ---- suggested searches (查漏闭环) ---- */
 .gap-card { border: 1px solid var(--border-2); border-radius: var(--radius); background: var(--primary-bg); padding: 13px 15px; margin-top: 4px; }
 .gap-card .gt { font-size: 13px; font-weight: 600; color: var(--primary); margin: 0 0 4px; display: flex; align-items: center; gap: 6px; }
