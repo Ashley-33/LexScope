@@ -218,6 +218,7 @@ async function runAutoFlow() {
     renderReport($('#report-root'), result, buildCtx());
     applyEmptyState(result);
     renderCoverage(result.coverage);
+    wireExportButton();
     gotoStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (e) {
@@ -296,6 +297,62 @@ function applyEmptyState(result) {
   if (emptyEl) emptyEl.outerHTML = passCardHTML(state.regs);
 }
 
+// ---------- 一键下载 PDF(无需打印弹窗)----------
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('PDF 组件加载失败,请检查网络'));
+    document.head.appendChild(s);
+  });
+}
+async function exportPdfDownload() {
+  const btn = $('#btn-download-pdf');
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2 spin" aria-hidden="true"></i> 生成中…'; }
+  const stage = $('#step-2');
+  try {
+    if (!window.html2pdf) {
+      await loadScript('https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js');
+    }
+    const name = (state.doc.name || '审查报告').replace(/\.[^.]+$/, '');
+    let date = '';
+    try { date = new Date().toLocaleDateString('zh-CN').replace(/\//g, '-'); } catch (e) { /* 忽略 */ }
+    const filename = 'LexScope审查报告-' + name + (date ? '-' + date : '') + '.pdf';
+    stage.classList.add('exporting');
+    await window.html2pdf().set({
+      margin: [8, 8, 10, 8],
+      filename,
+      image: { type: 'jpeg', quality: 0.96 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] },
+    }).from(stage).save();
+    toast('PDF 已下载');
+  } catch (e) {
+    toast('生成 PDF 失败:' + (e.message || String(e)), true);
+  } finally {
+    stage.classList.remove('exporting');
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+  }
+}
+// 用「下载 PDF」替换报告里默认的「导出 PDF(打印)」按钮
+function wireExportButton() {
+  const html = '<button class="btn btn-primary" id="btn-download-pdf"><i class="ti ti-download" aria-hidden="true"></i> 下载 PDF</button>';
+  const actions = document.querySelector('#report-root .report-actions');
+  if (actions) {
+    actions.innerHTML = html;
+  } else {
+    const bar = document.createElement('div');
+    bar.className = 'report-actions';
+    bar.innerHTML = html;
+    $('#report-root').prepend(bar);
+  }
+  const b = $('#btn-download-pdf');
+  if (b) b.addEventListener('click', exportPdfDownload);
+}
+
 // ---------- 报告交互回调 ----------
 function hashStr(str) {
   let h = 5381;
@@ -345,6 +402,7 @@ function buildCtx() {
         renderReport($('#report-root'), result, buildCtx());
         applyEmptyState(result);
         renderCoverage(result.coverage);
+        wireExportButton();
         window.scrollTo({ top: 0, behavior: 'smooth' });
         toast('已补搜并重审(共 ' + state.regs.length + ' 部法规)');
       } catch (e) {

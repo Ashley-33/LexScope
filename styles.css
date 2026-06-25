@@ -323,3 +323,7 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
   .print-only { display: block !important; }
 }
 .print-only { display: none; }
+
+/* 一键下载 PDF 时,临时隐藏交互按钮(不进 PDF) */
+.exporting .report-actions, .exporting .factions { display: none !important; }
+.exporting .gap-card .btn { display: none !important; }
