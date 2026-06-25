@@ -227,7 +227,7 @@ async function runAutoFlow() {
     const l3 = runLine('AI 正在逐条审查(对照 ' + regs.length + ' 条法规)…');
     reviewCount++;
     state.round = reviewCount;
-    state.mode = 'fast';
+    state.mode = 'full';
     const result = await runReview({ docText: state.doc.text, regs, mode: state.mode, settings, round: state.round });
     state.result = result;
     const n = (result.findings || []).length;

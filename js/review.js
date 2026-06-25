@@ -37,7 +37,7 @@ export async function runReview({ docText, regs, mode, settings, round = 1 }) {
   const baseBody = {
     model: modelName,
     temperature: 0.2,
-    max_tokens: 8000,
+    max_tokens: 16000,
     messages,
   };
 
