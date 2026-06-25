@@ -428,15 +428,6 @@ function buildCtx() {
     regCount: (state.regs || []).length,
     onAdopt: () => {},
     onIgnore: () => {},
-    onEdit: (id) => {
-      const f = (state.result.findings || []).find((x) => x.id === id);
-      if (!f) return;
-      const nextText = window.prompt('修改建议文本:', f.suggestion || '');
-      if (nextText == null) return;
-      f.suggestion = nextText;
-      const p = document.querySelector('#card-' + id + ' .suggestion p');
-      if (p) p.textContent = nextText;
-    },
     onReReview: async (keywords) => {
       const settings = getSettings();
       toast('正在补搜并重审…');

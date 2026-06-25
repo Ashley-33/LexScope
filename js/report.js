@@ -65,7 +65,7 @@ function findingBlock(f) {
       '<div class="fg-col fg-ext"><div class="fg-h">外规依据</div>' + extCol(f) + '</div>' +
     '</div>' +
     '<div class="factions"><button class="btn adopt">采纳</button>' +
-      '<button class="btn fedit">修改</button><button class="btn fignore">忽略</button></div>' +
+      '<button class="btn fignore">忽略</button></div>' +
   '</div>';
 }
 
@@ -168,8 +168,6 @@ function bind(root, ctx, findings) {
     if (ignore) ignore.classList.toggle('active', cur === 'ignored');
     if (adopt) adopt.addEventListener('click', () => apply((f && f.decision === 'adopted') ? '' : 'adopted'));
     if (ignore) ignore.addEventListener('click', () => apply((f && f.decision === 'ignored') ? '' : 'ignored'));
-    const ed = card.querySelector('.fedit');
-    if (ed) ed.addEventListener('click', () => safe(ctx.onEdit, id));
   });
   updateDecisionSummary(root, findings);
   root.querySelectorAll('.gap-card').forEach((gc) => {
