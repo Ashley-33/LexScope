@@ -390,7 +390,8 @@ async function exportPdfDownload() {
 }
 // 用「下载 PDF」替换报告里默认的「导出 PDF(打印)」按钮
 function wireExportButton() {
-  const html = '<button class="btn btn-primary" id="btn-download-pdf"><i class="ti ti-download" aria-hidden="true"></i> 下载 PDF</button>';
+  const html = '<button class="btn btn-primary" id="btn-download-pdf"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> 导出 PDF</button>' +
+    '<span class="pdf-tip">在弹出的打印窗口,「目标」选「另存为 PDF」即可(文字可选、法条链接可点)</span>';
   const actions = document.querySelector('#report-root .report-actions');
   if (actions) {
     actions.innerHTML = html;
@@ -401,7 +402,7 @@ function wireExportButton() {
     $('#report-root').prepend(bar);
   }
   const b = $('#btn-download-pdf');
-  if (b) b.addEventListener('click', exportPdfDownload);
+  if (b) b.addEventListener('click', () => window.print());
 }
 
 // ---------- 报告交互回调 ----------
