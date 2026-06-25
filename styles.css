@@ -164,7 +164,10 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 .basis > summary::-webkit-details-marker { display: none; }
 .basis > summary i { color: var(--accent-gold); font-size: 16px; }
 .basis-list { margin: 10px 0 0; padding-left: 18px; }
-.basis-list li { font-size: 13px; line-height: 1.9; color: var(--text-2); }
+.basis-list li { font-size: 13px; line-height: 1.9; color: var(--text-2); overflow-wrap: anywhere; }
+/* 长法规名/链接需可换行(覆盖 .lk 默认的 nowrap),避免撑破栏宽 */
+.basis-list .lk, .pass-list .lk { white-space: normal; overflow-wrap: anywhere; }
+.pass-list li { overflow-wrap: anywhere; }
 .basis-src { color: var(--text-3); font-size: 12px; margin-left: 4px; }
 
 /* 无风险时的「审查通过」正向反馈卡 */
@@ -250,7 +253,7 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 /* ---- two-column console ---- */
 .console { display: grid; grid-template-columns: 1.05fr 1fr; gap: 16px; align-items: start; }
 .pane-title { font-size: 12px; color: var(--text-3); letter-spacing: .05em; margin: 0 0 10px; }
-.doc-pane { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 16px 18px; }
+.doc-pane { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 16px 18px; min-width: 0; }
 .doc-pane .para { font-size: 14px; line-height: 1.95; color: var(--text); margin: 0 0 10px; }
 .hi { padding: 1px 2px; border-radius: 3px; cursor: pointer; }
 .hi.high { background: #f6c9c4; }
@@ -259,7 +262,7 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 .hi.active { box-shadow: 0 0 0 2px var(--primary); }
 
 /* ---- finding cards ---- */
-.findings-pane { display: flex; flex-direction: column; gap: 12px; }
+.findings-pane { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .fcard { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
 .fcard.flash { box-shadow: 0 0 0 2px var(--primary); }
 .fcard.adopted { opacity: .7; }
