@@ -19,7 +19,10 @@ function sevOf(s) { return (s === 'high' || s === 'medium' || s === 'low') ? s :
 function confLabel(c) {
   if (c === 'high' || c === 'medium' || c === 'low') return SEVERITY_LABELS[c];
   const n = Number(c);
-  if (isFinite(n) && c !== '' && c !== null) return n >= 80 ? '高' : (n >= 60 ? '中' : '低');
+  if (isFinite(n) && c !== '' && c !== null) {
+    const pct = n <= 1 ? n * 100 : n; // 0~1 小数(如 0.95)按百分比换算
+    return pct >= 80 ? '高' : (pct >= 60 ? '中' : '低');
+  }
   return c || '—';
 }
 

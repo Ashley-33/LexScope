@@ -114,6 +114,10 @@ export async function reviewCritic({ docText, regs, existing, settings, round = 
     }
     f.verified = !!(f.source_url && urlSet.has(f.source_url));
     if (!f.verified) f.linkSuspect = true;
+    // 用词统一:内规 → 受审文本
+    if (typeof f.problem === 'string') f.problem = f.problem.replace(/内规/g, '受审文本');
+    if (typeof f.suggestion === 'string') f.suggestion = f.suggestion.replace(/内规/g, '受审文本');
+    if (typeof f.title === 'string') f.title = f.title.replace(/内规/g, '受审文本');
   });
   return { findings };
 }
@@ -280,6 +284,17 @@ function normalize(obj, regs, round) {
   // ── coverage(审查覆盖·逐条对照)──
   let coverage = obj.coverage || [];
   if (!Array.isArray(coverage)) coverage = [];
+
+  // ── 用词统一:模型偶尔仍说"内规",一律改为"受审文本"(逐字引用字段不动)──
+  const fix = (s) => (typeof s === 'string' ? s.replace(/内规/g, '受审文本') : s);
+  findings.forEach((f) => {
+    if (!f || typeof f !== 'object') return;
+    f.problem = fix(f.problem); f.suggestion = fix(f.suggestion); f.title = fix(f.title);
+  });
+  coverage.forEach((c) => {
+    if (!c || typeof c !== 'object') return;
+    c.note = fix(c.note); c.topic = fix(c.topic);
+  });
 
   return { summary, findings, suggestedSearches, coverage };
 }
