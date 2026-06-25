@@ -16,6 +16,7 @@ function clampScore(n) {
   return Math.max(0, Math.min(100, Math.round(n)));
 }
 function sevOf(s) { return (s === 'high' || s === 'medium' || s === 'low') ? s : 'medium'; }
+function help(tip) { return '<span class="help" title="' + esc(tip) + '"><i class="ti ti-help-circle" aria-hidden="true"></i></span>'; }
 function confLabel(c) {
   if (c === 'high' || c === 'medium' || c === 'low') return SEVERITY_LABELS[c];
   const n = Number(c);
@@ -55,7 +56,8 @@ function findingBlock(f) {
       '<span class="fcap-right">' +
         '<span class="fstamp s-adopt"><i class="ti ti-stamp" aria-hidden="true"></i> 已采纳</span>' +
         '<span class="fstamp s-ignore"><i class="ti ti-ban" aria-hidden="true"></i> 已忽略</span>' +
-        '<span class="conf">置信度:' + esc(confLabel(f.confidence)) + (f.need_human_review ? ' · 待复核' : '') + '</span>' +
+        '<span class="conf">置信度:' + esc(confLabel(f.confidence)) + (f.need_human_review ? ' · 待复核' : '') +
+          help('置信度是 AI 对该条结论的把握(高/中/低);为中或低时会标「待复核」,提示该条 AI 没十足把握,建议人工核对后再处置。') + '</span>' +
       '</span></div>' +
     '<div class="finding-grid">' +
       '<div class="fg-col fg-internal"><div class="fg-h">受审文本原文</div>' +
@@ -145,7 +147,9 @@ function updateDecisionSummary(root, findings) {
   let a = 0, ig = 0;
   (findings || []).forEach((f) => { if (f && f.decision === 'adopted') a++; else if (f && f.decision === 'ignored') ig++; });
   const pending = n - a - ig;
-  el.innerHTML = '<i class="ti ti-clipboard-check" aria-hidden="true"></i> 处置进度:共 <b>' + n + '</b> 条 · ' +
+  el.innerHTML = '<i class="ti ti-clipboard-check" aria-hidden="true"></i> 处置进度' +
+    help('你对每条发现的处置(采纳/忽略),会随导出的 PDF 一起留痕,形成合规处置记录。') +
+    ':共 <b>' + n + '</b> 条 · ' +
     '<span class="ds-a">已采纳 ' + a + '</span> · <span class="ds-i">已忽略 ' + ig + '</span> · <span class="ds-p">待定 ' + pending + '</span>';
 }
 function bind(root, ctx, findings) {

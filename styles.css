@@ -93,6 +93,21 @@ h1, h2, h3 { font-weight: 600; margin: 0; }
 .settings-hint { color: var(--text-3); font-size: 13px; margin: 0 0 14px; }
 .settings-hint i { vertical-align: -2px; margin-right: 3px; }
 
+/* 帮助文档 */
+.help-lead { font-size: 14px; color: var(--text-2); line-height: 1.7; margin: 4px 0 16px; }
+.help-h { font-size: 14px; color: var(--primary); margin: 18px 0 8px; }
+.help-p { font-size: 13px; color: var(--text-2); line-height: 1.75; margin: 0; }
+.help-ol { margin: 0; padding-left: 20px; }
+.help-ol li { font-size: 13px; color: var(--text-2); line-height: 1.8; margin-bottom: 4px; }
+.help-terms { margin: 0; padding-left: 18px; }
+.help-terms li { font-size: 13px; color: var(--text-2); line-height: 1.75; margin-bottom: 5px; }
+.help-doc b { color: var(--text); }
+
+/* 行内问号提示(hover 显示 title)*/
+.help { cursor: help; margin-left: 4px; opacity: .6; display: inline-flex; }
+.help i { font-size: 13px; vertical-align: -1px; }
+.help:hover { opacity: 1; }
+
 .key-help { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
 .key-help summary { cursor: pointer; font-size: 13px; color: var(--link); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
 .key-help summary::-webkit-details-marker { display: none; }

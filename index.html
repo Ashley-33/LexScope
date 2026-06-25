@@ -17,6 +17,9 @@
       </span>
     </div>
     <div class="topbar-actions">
+      <button id="btn-help" class="btn btn-ghost" aria-label="帮助">
+        <i class="ti ti-help-circle" aria-hidden="true"></i> 帮助
+      </button>
       <button id="btn-restart" class="btn btn-ghost" aria-label="新建审查">
         <i class="ti ti-file-plus" aria-hidden="true"></i> 新建审查
       </button>
@@ -72,6 +75,47 @@
     <div class="settings-actions">
       <button id="btn-save-settings" class="btn btn-primary"><i class="ti ti-device-floppy" aria-hidden="true"></i> 保存并关闭</button>
     </div>
+  </section>
+  </div>
+
+  <!-- 帮助文档弹层 -->
+  <div id="help-overlay" class="modal-overlay" hidden>
+  <section class="help-doc modal-dialog" role="dialog" aria-modal="true" aria-label="使用说明">
+    <div class="panel-head">
+      <h2>LexScope 使用说明</h2>
+      <button id="btn-close-help" class="modal-close" aria-label="关闭"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+
+    <p class="help-lead">用法规审视你的制度——上传内部制度,AI 对照内置权威法规库逐条审查,找出<b>冲突、遗漏、越权、标准过宽</b>,产出可留痕、可导出的合规审查报告。</p>
+
+    <h3 class="help-h">适用场景</h3>
+    <p class="help-p">面向金融机构、企业(尤其<b>企业集团财务公司</b>)的内部制度合规审查。已内置 35 部权威法规、覆盖:<b>公司治理 · 票据(承兑/贴现)· 信贷 · 关联交易 · 劳动用工 · 数据合规 · 反洗钱 · 财税</b>等垂类。例如审查《审计委员会工作规则》《票据承兑/贴现业务操作细则》《信贷管理办法》等。</p>
+
+    <h3 class="help-h">怎么用(三步)</h3>
+    <ol class="help-ol">
+      <li><b>上传制度</b> —— 拖拽或点击上传 Word / PDF / 图片,或直接粘贴文本。</li>
+      <li><b>分析</b> —— 点「开始审查」,AI 自动:判断该制度受哪些法律法规约束 → 在内置法规库中挑出相关条款 → 逐条全文体检 → 二次查漏复审。</li>
+      <li><b>审查报告</b> —— 每条发现一行三栏对照(受审文本原文 | 审查结论 | 外规依据+链接);逐条<b>采纳/忽略</b>盖章留痕;一键导出 PDF(文字可选、链接可点)。</li>
+    </ol>
+
+    <h3 class="help-h">名词解释</h3>
+    <ul class="help-terms">
+      <li><b>受审文本</b>:你上传、正在被审查的这份制度。</li>
+      <li><b>外规依据</b>:与受审文本比对的外部法律法规(及具体条款、原文链接)。</li>
+      <li><b>置信度(高/中/低)</b>:AI 对该条结论的把握程度。</li>
+      <li><b>待复核</b>:置信度为中/低时标注,提示该条 AI 没十足把握,<b>建议人工核对后再处置</b>。</li>
+      <li><b>链接存疑</b>:该法条链接未通过校验,请点开人工核对原文。</li>
+      <li><b>内置库 / 联网</b>:该法规来自内置权威法规库 / 联网补充检索。</li>
+      <li><b>审查依据</b>:本次纳入对照的法规清单。</li>
+      <li><b>审查覆盖</b>:受审文本每一处用了什么法规核对、结论如何(合规/有风险/部分覆盖/未覆盖)。</li>
+      <li><b>采纳 / 忽略</b>:你对每条发现的处置决定,随报告 PDF 一起留痕。</li>
+    </ul>
+
+    <h3 class="help-h">隐私与边界</h3>
+    <ul class="help-terms">
+      <li><b>自带 Key</b>:DeepSeek 模型 Key 必填(建议用 deepseek-reasoner);联网搜索 Key 可选。密钥仅存于你本地浏览器,平台不上传、不留存。</li>
+      <li><b>法规库</b>:条文摘自官方来源并经交叉核验,个别标「待复核」;仅供审查参考,<b>不构成法律意见</b>,请以现行有效法规与人工复核为准。</li>
+    </ul>
   </section>
   </div>
 

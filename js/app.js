@@ -89,6 +89,15 @@ function bindSettings() {
   });
 }
 
+// ---------- 帮助文档弹窗 ----------
+function bindHelp() {
+  const ov = $('#help-overlay');
+  $('#btn-help').addEventListener('click', () => { ov.hidden = !ov.hidden; });
+  $('#btn-close-help').addEventListener('click', () => { ov.hidden = true; });
+  ov.addEventListener('click', (e) => { if (e.target === ov) ov.hidden = true; });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ov.hidden) ov.hidden = true; });
+}
+
 // ---------- 步骤导航(两步:上传 / 报告)----------
 function gotoStep(n) {
   currentStep = n;
@@ -293,7 +302,9 @@ function renderBasis(regs) {
       cnt + ' ' + originTag + '</li>';
   }).join('');
   el.innerHTML =
-    '<details class="basis" open><summary><i class="ti ti-books" aria-hidden="true"></i> 审查依据:本次纳入 ' + byReg.size + ' 部法规、' + regs.length + ' 条条款(点开查看 / 核对来源)</summary>' +
+    '<details class="basis" open><summary><i class="ti ti-books" aria-hidden="true"></i> 审查依据' +
+    help('本次纳入对照的法规清单;标「内置库」的来自内置权威法规库,标「联网」的为联网补充检索。') +
+    ':本次纳入 ' + byReg.size + ' 部法规、' + regs.length + ' 条条款(点开查看 / 核对来源)</summary>' +
     '<ul class="basis-list">' + items + '</ul></details>';
 }
 
@@ -322,7 +333,9 @@ function renderCoverage(coverage) {
     '</tr>';
   }).join('');
   el.innerHTML =
-    '<details class="coverage" open><summary><i class="ti ti-list-check" aria-hidden="true"></i> 审查覆盖 · 逐条对照(' + coverage.length + ' 项):每条用了什么法规核对、结论如何</summary>' +
+    '<details class="coverage" open><summary><i class="ti ti-list-check" aria-hidden="true"></i> 审查覆盖 · 逐条对照' +
+    help('受审文本每一处用了哪些法规核对、结论如何(合规 / 有风险 / 部分覆盖 / 未覆盖),体现审查的全面性。') +
+    '(' + coverage.length + ' 项):每条用了什么法规核对、结论如何</summary>' +
     '<div class="cov-wrap"><table class="cov-table"><thead><tr>' +
       '<th>受审文本条款</th><th>核对依据(外规)</th><th>结论</th><th>说明</th>' +
     '</tr></thead><tbody>' + rows + '</tbody></table></div></details>';
@@ -506,10 +519,12 @@ function esc(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+function help(tip) { return '<span class="help" title="' + esc(tip) + '"><i class="ti ti-help-circle" aria-hidden="true"></i></span>'; }
 
 // ---------- init ----------
 function init() {
   bindSettings();
+  bindHelp();
   bindUpload();
   bindNav();
   bindRestart();
