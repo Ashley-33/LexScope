@@ -7,7 +7,7 @@ import { runReview, extractQueries, reviewCritic } from './review.js';
 import { renderReport } from './report.js';
 import { selectLibraryClauses } from './lawlib.js';
 
-// 合并两轮 findings(按 内规条款+外规条款+类型 去重)
+// 合并两轮 findings(按 受审文本条款+外规条款+类型 去重)
 function mergeFindings(a, b) {
   const key = (f) => (f.internal_clause_no || '') + '|' + (f.reg_clause_no || '') + '|' + (f.risk_type || '') + '|' + (f.internal_quote || '').slice(0, 18);
   const map = new Map();
@@ -323,7 +323,7 @@ function renderCoverage(coverage) {
   el.innerHTML =
     '<details class="coverage" open><summary><i class="ti ti-list-check" aria-hidden="true"></i> 审查覆盖 · 逐条对照(' + coverage.length + ' 项):每条用了什么法规核对、结论如何</summary>' +
     '<div class="cov-wrap"><table class="cov-table"><thead><tr>' +
-      '<th>内规条款</th><th>核对依据(外规)</th><th>结论</th><th>说明</th>' +
+      '<th>受审文本条款</th><th>核对依据(外规)</th><th>结论</th><th>说明</th>' +
     '</tr></thead><tbody>' + rows + '</tbody></table></div></details>';
 }
 

@@ -16,7 +16,12 @@ function clampScore(n) {
   return Math.max(0, Math.min(100, Math.round(n)));
 }
 function sevOf(s) { return (s === 'high' || s === 'medium' || s === 'low') ? s : 'medium'; }
-function confLabel(c) { return SEVERITY_LABELS[c] || (c || '—'); }
+function confLabel(c) {
+  if (c === 'high' || c === 'medium' || c === 'low') return SEVERITY_LABELS[c];
+  const n = Number(c);
+  if (isFinite(n) && c !== '' && c !== null) return n >= 80 ? '高' : (n >= 60 ? '中' : '低');
+  return c || '—';
+}
 
 function scoreRing(score, color) {
   return '<div class="score-ring"><svg viewBox="0 0 36 36" role="img" aria-label="合规评分 ' + score + '">' +
@@ -46,7 +51,7 @@ function findingBlock(f) {
     '<div class="fcap sev-' + sv + '"><span>' + head + '</span>' +
       '<span class="conf">置信度:' + esc(confLabel(f.confidence)) + (f.need_human_review ? ' · 待复核' : '') + '</span></div>' +
     '<div class="finding-grid">' +
-      '<div class="fg-col fg-internal"><div class="fg-h">现行制度原文</div>' +
+      '<div class="fg-col fg-internal"><div class="fg-h">受审文本原文</div>' +
         (f.internal_clause_no ? '<div class="fg-clause">' + esc(f.internal_clause_no) + '</div>' : '') +
         '<div class="fg-text"><mark class="fg-hl">' + esc(f.internal_quote || '') + '</mark></div></div>' +
       '<div class="fg-col fg-concl"><div class="fg-h">审查结论</div>' + concl + '</div>' +
