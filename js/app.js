@@ -94,20 +94,25 @@ function gotoStep(n) {
   currentStep = n;
   $('#step-1').hidden = (n !== 1);
   $('#step-2').hidden = (n !== 2);
+  $('#step-3').hidden = (n !== 3);
   document.querySelectorAll('.stepper .si').forEach((si) => {
     const s = +si.dataset.s;
     si.classList.toggle('on', s === n);
     si.classList.toggle('done', s < n);
   });
   const prev = $('#btn-prev'), next = $('#btn-next');
-  if (n === 2) {
-    next.style.visibility = 'hidden';
-    prev.style.visibility = 'visible';
-  } else {
+  if (n === 1) {
     next.style.visibility = 'visible';
     next.disabled = false;
     next.innerHTML = '<i class="ti ti-player-play" aria-hidden="true"></i> 开始审查';
     prev.style.visibility = 'hidden';
+  } else if (n === 2) {
+    // 分析中:底部导航隐藏(出错时由 runAutoFlow 再显示「重新上传」)
+    next.style.visibility = 'hidden';
+    prev.style.visibility = 'hidden';
+  } else {
+    next.style.visibility = 'hidden';
+    prev.style.visibility = 'visible';
   }
 }
 
@@ -200,9 +205,7 @@ async function runAutoFlow() {
   if (!settings.modelKey) { toast('请先在「设置」中填写 AI 模型 API Key', true); openSettings(); return; }
   if (state.doc.status !== 'ready' || !state.doc.text) { toast('请先上传或粘贴制度文件', true); return; }
 
-  const next = $('#btn-next');
-  next.disabled = true;
-  next.innerHTML = '<i class="ti ti-loader-2 spin" aria-hidden="true"></i> 审查中…';
+  gotoStep(2); // 进入「分析」步
   showRun();
 
   try {
@@ -227,8 +230,7 @@ async function runAutoFlow() {
 
     if (regs.length === 0) {
       runLine('未匹配到任何法规。请确认法规库已加载。', 'err');
-      next.disabled = false;
-      next.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> 重试';
+      $('#btn-prev').style.visibility = 'visible';
       return;
     }
     state.regs = regs;
@@ -260,12 +262,11 @@ async function runAutoFlow() {
     applyEmptyState(result);
     renderCoverage(result.coverage);
     wireExportButton();
-    gotoStep(2);
+    gotoStep(3);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (e) {
     runLine('出错:' + (e.message || String(e)), 'err');
-    next.disabled = false;
-    next.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> 重试';
+    $('#btn-prev').style.visibility = 'visible';
   }
 }
 
@@ -506,7 +507,7 @@ function bindRestart() {
 // ---------- 导航 ----------
 function bindNav() {
   $('#btn-next').addEventListener('click', () => { if (currentStep === 1) runAutoFlow(); });
-  $('#btn-prev').addEventListener('click', () => { if (currentStep === 2) gotoStep(1); });
+  $('#btn-prev').addEventListener('click', () => { gotoStep(1); });
 }
 
 // ---------- utils ----------

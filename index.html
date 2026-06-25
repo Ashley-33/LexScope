@@ -79,7 +79,9 @@
   <nav class="stepper" aria-label="流程步骤">
     <div class="si on" data-s="1"><span class="dot">1</span><span class="lbl">上传制度</span></div>
     <span class="bar"></span>
-    <div class="si" data-s="2"><span class="dot">2</span><span class="lbl">审查报告</span></div>
+    <div class="si" data-s="2"><span class="dot">2</span><span class="lbl">分析</span></div>
+    <span class="bar"></span>
+    <div class="si" data-s="3"><span class="dot">3</span><span class="lbl">审查报告</span></div>
   </nav>
 
   <main>
@@ -98,13 +100,16 @@
         <textarea id="paste-text" placeholder="将制度全文粘贴到此处……"></textarea>
         <button id="btn-use-paste" class="btn">使用此文本</button>
       </details>
-
-      <!-- 自动流水线进度 -->
-      <div id="run-status" class="run-status" hidden></div>
     </section>
 
-    <!-- 步骤2:审查报告(report.js 渲染) -->
+    <!-- 步骤2:分析(自动流水线进度) -->
     <section id="step-2" class="step" data-step="2" hidden>
+      <div class="analyzing-head"><i class="ti ti-scan-eye spin-slow" aria-hidden="true"></i> 正在分析与审查……</div>
+      <div id="run-status" class="run-status"></div>
+    </section>
+
+    <!-- 步骤3:审查报告(report.js 渲染) -->
+    <section id="step-3" class="step" data-step="3" hidden>
       <div id="review-basis"></div>
       <div id="report-root"></div>
       <div id="coverage"></div>
