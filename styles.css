@@ -165,6 +165,25 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 .pass-note { font-size: 12px; color: var(--text-3); margin: 11px 0 0; line-height: 1.6; }
 .pass-note i { vertical-align: -2px; margin-right: 3px; }
 
+/* 审查覆盖 · 逐条对照表 */
+.coverage { margin-top: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.coverage > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text); list-style: none; display: flex; align-items: center; gap: 8px; }
+.coverage > summary::-webkit-details-marker { display: none; }
+.coverage > summary i { color: var(--primary); font-size: 18px; }
+.cov-wrap { margin-top: 12px; overflow-x: auto; }
+.cov-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cov-table th { text-align: left; font-weight: 600; color: var(--text-2); padding: 8px 10px; border-bottom: 2px solid var(--border); white-space: nowrap; }
+.cov-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: top; line-height: 1.6; }
+.cov-table tr:last-child td { border-bottom: none; }
+.cov-clause { color: var(--text); font-weight: 500; white-space: nowrap; }
+.cov-topic { display: block; font-weight: 400; font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.cov-note { color: var(--text-3); }
+.cov-badge { font-size: 12px; padding: 2px 9px; border-radius: 5px; white-space: nowrap; }
+.cov-badge.cov-ok { background: var(--success-bg); color: var(--success); }
+.cov-badge.cov-risk { background: var(--danger-bg); color: var(--danger); }
+.cov-badge.cov-partial { background: var(--warning-bg); color: var(--warning); }
+.cov-badge.cov-none { background: var(--surface-2); color: var(--text-3); }
+
 /* ---- step2: search & regs ---- */
 .search-row { display: flex; gap: 10px; }
 .search-row input { flex: 1; }

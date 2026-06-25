@@ -210,6 +210,7 @@ async function runAutoFlow() {
     renderBasis(regs);
     renderReport($('#report-root'), result, buildCtx());
     applyEmptyState(result);
+    renderCoverage(result.coverage);
     gotoStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (e) {
@@ -234,6 +235,37 @@ function renderBasis(regs) {
   el.innerHTML =
     '<details class="basis" open><summary><i class="ti ti-books" aria-hidden="true"></i> 审查依据:本次自动纳入 ' + regs.length + ' 部权威法规(点开查看 / 核对来源)</summary>' +
     '<ul class="basis-list">' + items + '</ul></details>';
+}
+
+// ---------- 审查覆盖·逐条对照(哪条用什么法规查的)----------
+function covStatusBadge(s) {
+  const map = {
+    compliant: ['合规', 'cov-ok'], risk: ['有风险', 'cov-risk'],
+    partial: ['部分覆盖', 'cov-partial'], not_covered: ['未覆盖', 'cov-none'],
+  };
+  const m = map[s] || ['—', 'cov-none'];
+  return '<span class="cov-badge ' + m[1] + '">' + m[0] + '</span>';
+}
+function renderCoverage(coverage) {
+  const el = $('#coverage');
+  if (!coverage || !coverage.length) { el.innerHTML = ''; return; }
+  const rows = coverage.map((c) => {
+    const against = Array.isArray(c.checked_against)
+      ? c.checked_against.map((x) => esc(x)).join('、')
+      : esc(c.checked_against || '');
+    return '<tr>' +
+      '<td class="cov-clause">' + esc(c.clause || '') +
+        (c.topic ? '<span class="cov-topic">' + esc(c.topic) + '</span>' : '') + '</td>' +
+      '<td>' + (against || '—') + '</td>' +
+      '<td>' + covStatusBadge(c.status) + '</td>' +
+      '<td class="cov-note">' + esc(c.note || '') + '</td>' +
+    '</tr>';
+  }).join('');
+  el.innerHTML =
+    '<details class="coverage" open><summary><i class="ti ti-list-check" aria-hidden="true"></i> 审查覆盖 · 逐条对照(' + coverage.length + ' 项):每条用了什么法规核对、结论如何</summary>' +
+    '<div class="cov-wrap"><table class="cov-table"><thead><tr>' +
+      '<th>内规条款</th><th>核对依据(外规)</th><th>结论</th><th>说明</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div></details>';
 }
 
 // ---------- 无风险时的「审查通过」正向反馈 ----------
@@ -305,6 +337,7 @@ function buildCtx() {
         renderBasis(state.regs);
         renderReport($('#report-root'), result, buildCtx());
         applyEmptyState(result);
+        renderCoverage(result.coverage);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         toast('已补搜并重审(共 ' + state.regs.length + ' 部法规)');
       } catch (e) {

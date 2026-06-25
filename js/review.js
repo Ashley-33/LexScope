@@ -226,7 +226,11 @@ function normalize(obj, regs, round) {
   let suggestedSearches = obj.suggested_searches || obj.suggestedSearches || [];
   if (!Array.isArray(suggestedSearches)) suggestedSearches = [];
 
-  return { summary, findings, suggestedSearches };
+  // ── coverage(审查覆盖·逐条对照)──
+  let coverage = obj.coverage || [];
+  if (!Array.isArray(coverage)) coverage = [];
+
+  return { summary, findings, suggestedSearches, coverage };
 }
 
 /**
