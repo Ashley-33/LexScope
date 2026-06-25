@@ -360,6 +360,32 @@ function bindPrintFilename() {
   window.addEventListener('afterprint', () => { if (orig) document.title = orig; });
 }
 
+// ---------- 重新开始(顶部常驻)----------
+function resetAll() {
+  state.doc = { name: '', text: '', status: 'empty' };
+  state.regs = [];
+  state.result = null;
+  state.round = 1;
+  reviewCount = 0;
+  const fs = $('#file-status'); fs.hidden = true; fs.innerHTML = '';
+  $('#file-input').value = '';
+  $('#paste-text').value = '';
+  const rs = $('#run-status'); rs.hidden = true; rs.innerHTML = '';
+  $('#review-basis').innerHTML = '';
+  $('#report-root').innerHTML = '';
+  $('#coverage').innerHTML = '';
+  gotoStep(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function bindRestart() {
+  $('#btn-restart').addEventListener('click', () => {
+    if (state.result || state.doc.status === 'ready') {
+      if (!window.confirm('确定要重新开始吗?当前审查结果将清空。')) return;
+    }
+    resetAll();
+  });
+}
+
 // ---------- 导航 ----------
 function bindNav() {
   $('#btn-next').addEventListener('click', () => { if (currentStep === 1) runAutoFlow(); });
@@ -377,6 +403,7 @@ function init() {
   bindSettings();
   bindUpload();
   bindNav();
+  bindRestart();
   bindPrintFilename();
   gotoStep(1);
   const s = getSettings();
