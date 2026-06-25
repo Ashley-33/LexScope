@@ -103,6 +103,22 @@ export function buildUserMessage(docText, regs, mode) {
   return lines.join('\n');
 }
 
+// 查漏复审(第二遍):基于已发现问题,专门找"遗漏的"问题
+export const CRITIC_PROMPT = `你是合规审查复核专家。下面给你:内规全文、本次纳入的外规条文、以及"已发现的问题"清单。请再做一轮【查漏】:逐条核对内规与外规,找出【尚未发现的、被遗漏的】问题——尤其是"遗漏(omission)"类(外规强制要求某要素 / 职责 / 程序,内规全文未作规定),以及冲突、越权、标准过宽。
+方法:把每条外规拆成若干"应当 / 必须"要点,逐一在内规全文中查找是否落实,缺失即为遗漏。
+要求:
+- 只输出【新增】问题,不要重复"已发现的问题"清单里的条目;若确无新增,findings 返回空数组。
+- 同样遵守:零编造法条(reg_quote 须在所提供外规条文中逐字可找到)、零编造链接(source_url 原样复制对应 srcID 的 URL)、内规逐字引用(internal_quote 逐字照抄)、必标置信度。
+严格只输出单个 JSON 对象,不要任何其它文字:{"findings":[ { 与主审查相同的 finding 结构:id/round/risk_type/severity/internal_clause_no/internal_quote/source_id/reg_name/reg_clause_no/reg_quote/source_url/problem/suggestion/confidence/need_human_review } ]}`;
+
+export function buildCriticMessage(docText, regs, existing) {
+  const ex = (existing || []).map((f, i) =>
+    `${i + 1}. ${f.internal_clause_no || ''} ${f.risk_type || ''} — ${(f.problem || '').slice(0, 50)}`
+  ).join('\n') || '(无)';
+  return buildUserMessage(docText, regs, 'full') +
+    '\n\n# 已发现的问题(请勿重复,只找新增的遗漏 / 冲突 / 越权 / 过宽):\n' + ex;
+}
+
 // 从模型返回文本中稳健地提取 JSON 对象
 export function extractJSON(text) {
   if (!text) throw new Error('模型返回为空');

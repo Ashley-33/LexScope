@@ -2,7 +2,7 @@
 // 设计契约见 README;仅依赖 config.js,不依赖 state.js。
 // 浏览器原生 ES module。
 
-import { SYSTEM_PROMPT, buildUserMessage, extractJSON, TOPIC_PROMPT, buildTopicMessage } from './config.js';
+import { SYSTEM_PROMPT, buildUserMessage, extractJSON, TOPIC_PROMPT, buildTopicMessage, CRITIC_PROMPT, buildCriticMessage } from './config.js';
 
 // 合法的风险类型集合(用于兜底统计 counts)
 const RISK_TYPES = ['conflict', 'omission', 'ultra_vires', 'ambiguous', 'wording', 'outdated'];
@@ -65,6 +65,57 @@ export async function runReview({ docText, regs, mode, settings, round = 1 }) {
   }
 
   return normalize(obj, regList, round);
+}
+
+/**
+ * 查漏复审(第二遍):基于已发现问题,找出被遗漏的新增问题。
+ * @returns {Promise<{findings:Array}>} 仅新增的、已做反幻觉校验的 findings
+ */
+export async function reviewCritic({ docText, regs, existing, settings, round = 1 }) {
+  const s = settings || {};
+  const modelKey = (s.modelKey || '').trim();
+  if (!modelKey) return { findings: [] };
+  const regList = Array.isArray(regs) ? regs : [];
+  const url = s.proxy ? s.proxy + (s.modelEndpoint || '') : (s.modelEndpoint || '');
+  const messages = [
+    { role: 'system', content: CRITIC_PROMPT },
+    { role: 'user', content: buildCriticMessage(docText, regList, existing) },
+  ];
+  const base = { model: s.modelName || '', temperature: 0.2, max_tokens: 12000, messages };
+
+  let content;
+  try {
+    content = await callModel(url, modelKey, { ...base, response_format: { type: 'json_object' } });
+  } catch (err) {
+    if (err && err._retryWithoutResponseFormat) {
+      content = await callModel(url, modelKey, base);
+    } else {
+      throw err;
+    }
+  }
+
+  let obj;
+  try { obj = extractJSON(content); } catch (e) { return { findings: [] }; }
+  const findings = Array.isArray(obj && obj.findings) ? obj.findings : [];
+
+  // 反幻觉校验(同主审查)
+  const urlSet = new Set();
+  const idToUrl = new Map();
+  regList.forEach((r) => {
+    if (r && r.url) urlSet.add(r.url);
+    if (r && r.id != null) idToUrl.set(String(r.id), r.url || '');
+  });
+  findings.forEach((f) => {
+    if (!f || typeof f !== 'object') return;
+    f.round = f.round || round;
+    if (!f.source_url && f.source_id != null && idToUrl.has(String(f.source_id))) {
+      const hit = idToUrl.get(String(f.source_id));
+      if (hit) f.source_url = hit;
+    }
+    f.verified = !!(f.source_url && urlSet.has(f.source_url));
+    if (!f.verified) f.linkSuspect = true;
+  });
+  return { findings };
 }
 
 /**

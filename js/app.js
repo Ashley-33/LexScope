@@ -3,9 +3,37 @@ import { state, nextRegId } from './state.js';
 import { getSettings, saveSettings, LAW_DOMAINS } from './config.js';
 import { parseFile } from './parse.js';
 import { searchRegulations } from './search.js';
-import { runReview, extractQueries } from './review.js';
+import { runReview, extractQueries, reviewCritic } from './review.js';
 import { renderReport } from './report.js';
 import { selectLibraryClauses } from './lawlib.js';
+
+// 合并两轮 findings(按 内规条款+外规条款+类型 去重)
+function mergeFindings(a, b) {
+  const key = (f) => (f.internal_clause_no || '') + '|' + (f.reg_clause_no || '') + '|' + (f.risk_type || '') + '|' + (f.internal_quote || '').slice(0, 18);
+  const map = new Map();
+  [...(a || []), ...(b || [])].forEach((f) => { if (f && typeof f === 'object') map.set(key(f), f); });
+  return [...map.values()];
+}
+// 合并后重算评分与计数
+function recomputeSummary(findings) {
+  const counts = { conflict: 0, omission: 0, ultra_vires: 0, ambiguous: 0, wording: 0, outdated: 0 };
+  let high = 0, med = 0, low = 0;
+  (findings || []).forEach((f) => {
+    if (!f || typeof f !== 'object') return;
+    if (counts[f.risk_type] != null) counts[f.risk_type]++;
+    if (f.risk_type === 'wording') return;
+    if (f.severity === 'high') high++;
+    else if (f.severity === 'medium') med++;
+    else if (f.severity === 'low') low++;
+  });
+  const score = Math.max(0, 100 - high * 12 - med * 5 - low * 2);
+  return {
+    score,
+    risk_level: score < 60 ? 'high' : (score < 80 ? 'medium' : 'low'),
+    score_breakdown: `基础分100;高 ${high}×12、中 ${med}×5、低 ${low}×2(措辞不计);得分 ${score}`,
+    counts,
+  };
+}
 
 const $ = (sel) => document.querySelector(sel);
 let currentStep = 1;
@@ -187,51 +215,44 @@ async function runAutoFlow() {
     }
     setLine(l1, 'done', '已确定 ' + queries.length + ' 个检索方向:' + queries.slice(0, 5).join(' / '));
 
-    // 2a) 内置权威法规库(底座)
+    // 2) 内置权威法规库(主审查只用库,聚焦去噪;联网走「补搜并重审」按钮)
     const lLib = runLine('正在匹配内置权威法规库…');
-    let libRegs = [];
+    let regs = [];
     try {
-      libRegs = await selectLibraryClauses(state.doc.text, queries, 50);
-      setLine(lLib, 'done', '命中内置法规库 ' + libRegs.length + ' 条条款');
+      regs = await selectLibraryClauses(state.doc.text, queries, 28);
+      setLine(lLib, 'done', '命中内置法规库 ' + regs.length + ' 条条款(联网补充可在报告页点「补搜并重审」)');
     } catch (e) {
       setLine(lLib, 'err', '法规库加载失败:' + (e.message || e));
     }
 
-    // 2b) 联网补充(可选;填了搜索 Key 才走)
-    let webRegs = [];
-    if (settings.searchKey) {
-      const lWeb = runLine('正在联网补充检索新规 / 冷门规…');
-      try {
-        webRegs = await searchAll(queries, settings, true);
-        if (webRegs.length === 0) webRegs = await searchAll(queries, settings, false);
-        setLine(lWeb, 'done', '联网补充 ' + webRegs.length + ' 条');
-      } catch (e) {
-        setLine(lWeb, 'err', '联网补充失败(不影响库内审查):' + (e.message || e));
-      }
-    }
-
-    // 合并:库为底座,联网按 URL 去重补充
-    const regs = libRegs.slice();
-    const libUrls = new Set(libRegs.map((r) => r.url));
-    webRegs.forEach((w) => { if (w.url && !libUrls.has(w.url)) regs.push(w); });
-
     if (regs.length === 0) {
-      runLine('未匹配到任何法规。请确认法规库已加载,或在「设置」中填写联网搜索 Key 作补充。', 'err');
+      runLine('未匹配到任何法规。请确认法规库已加载。', 'err');
       next.disabled = false;
       next.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> 重试';
       return;
     }
     state.regs = regs;
 
-    // 3) AI 审查
-    const l3 = runLine('AI 正在逐条审查(对照 ' + regs.length + ' 条法规)…');
+    // 3) AI 审查(第一遍:全文体检)
     reviewCount++;
     state.round = reviewCount;
     state.mode = 'full';
+    const l3 = runLine('AI 正在逐条审查(对照 ' + regs.length + ' 条法规)…');
     const result = await runReview({ docText: state.doc.text, regs, mode: state.mode, settings, round: state.round });
+    setLine(l3, 'done', '初审完成,发现 ' + (result.findings || []).length + ' 个风险点');
+
+    // 3b) 查漏复审(第二遍:专找遗漏)
+    const lc = runLine('正在二次查漏复审(专找被忽略的遗漏)…');
+    try {
+      const extra = await reviewCritic({ docText: state.doc.text, regs, existing: result.findings, settings, round: state.round });
+      const before = (result.findings || []).length;
+      result.findings = mergeFindings(result.findings, extra.findings);
+      result.summary = recomputeSummary(result.findings);
+      setLine(lc, 'done', '复审补充 ' + Math.max(0, result.findings.length - before) + ' 条,合计 ' + result.findings.length + ' 条');
+    } catch (e) {
+      setLine(lc, 'err', '复审跳过(不影响初审结果):' + (e.message || e));
+    }
     state.result = result;
-    const n = (result.findings || []).length;
-    setLine(l3, 'done', '审查完成,发现 ' + n + ' 个风险点');
 
     // 4) 渲染报告
     renderBasis(regs);
