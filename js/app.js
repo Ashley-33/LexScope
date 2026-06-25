@@ -209,6 +209,7 @@ async function runAutoFlow() {
     // 4) 渲染报告
     renderBasis(regs);
     renderReport($('#report-root'), result, buildCtx());
+    applyEmptyState(result);
     gotoStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (e) {
@@ -233,6 +234,27 @@ function renderBasis(regs) {
   el.innerHTML =
     '<details class="basis" open><summary><i class="ti ti-books" aria-hidden="true"></i> 审查依据:本次自动纳入 ' + regs.length + ' 部权威法规(点开查看 / 核对来源)</summary>' +
     '<ul class="basis-list">' + items + '</ul></details>';
+}
+
+// ---------- 无风险时的「审查通过」正向反馈 ----------
+function passCardHTML(regs) {
+  const list = (regs || []).map((r) =>
+    '<li>' + (r.url
+      ? '<a class="lk" href="' + esc(r.url) + '" target="_blank" rel="noopener">' + esc(r.title) + ' <i class="ti ti-external-link" aria-hidden="true"></i></a>'
+      : esc(r.title)) + '</li>'
+  ).join('');
+  return '<div class="pass-card">' +
+    '<div class="pass-head"><i class="ti ti-shield-check" aria-hidden="true"></i> 审查通过 · 未发现与现行法规冲突的条款</div>' +
+    '<p class="pass-sub">已对照以下 ' + (regs ? regs.length : 0) + ' 部法律法规逐条核对,你的制度在这些规定下未见明显风险。</p>' +
+    (list ? '<ul class="pass-list">' + list + '</ul>' : '') +
+    '<p class="pass-note"><i class="ti ti-info-circle" aria-hidden="true"></i> 本结论以本次检索到的法规为准;如需更全面,可用下方「补搜并重审」纳入更多法规。</p>' +
+  '</div>';
+}
+// 若本轮无风险点,把报告里默认的「未发现明显风险点」替换为正向反馈卡
+function applyEmptyState(result) {
+  if ((result.findings || []).length) return;
+  const emptyEl = document.querySelector('#report-root .empty');
+  if (emptyEl) emptyEl.outerHTML = passCardHTML(state.regs);
 }
 
 // ---------- 报告交互回调 ----------
@@ -282,6 +304,7 @@ function buildCtx() {
         state.result = result;
         renderBasis(state.regs);
         renderReport($('#report-root'), result, buildCtx());
+        applyEmptyState(result);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         toast('已补搜并重审(共 ' + state.regs.length + ' 部法规)');
       } catch (e) {
