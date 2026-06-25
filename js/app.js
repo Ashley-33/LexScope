@@ -380,7 +380,7 @@ function resetAll() {
 function bindRestart() {
   $('#btn-restart').addEventListener('click', () => {
     if (state.result || state.doc.status === 'ready') {
-      if (!window.confirm('确定要重新开始吗?当前审查结果将清空。')) return;
+      if (!window.confirm('确定要新建审查吗?当前审查结果将清空。')) return;
     }
     resetAll();
   });
