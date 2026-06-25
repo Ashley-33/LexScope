@@ -169,6 +169,8 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 .basis-list .lk, .pass-list .lk { white-space: normal; overflow-wrap: anywhere; }
 .pass-list li { overflow-wrap: anywhere; }
 .basis-src { color: var(--text-3); font-size: 12px; margin-left: 4px; }
+.basis-lib { background: var(--success-bg); color: var(--success); padding: 1px 7px; border-radius: 4px; }
+.basis-web { background: var(--primary-bg); color: var(--primary); padding: 1px 7px; border-radius: 4px; }
 
 /* 无风险时的「审查通过」正向反馈卡 */
 .pass-card { border: 1px solid var(--success); background: var(--success-bg); border-radius: var(--radius); padding: 16px 18px; }

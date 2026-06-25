@@ -86,7 +86,7 @@ export function buildUserMessage(docText, regs, mode) {
   regs.forEach((r, i) => {
     const id = r.id || ('W' + (i + 1));
     lines.push(`[srcID: ${id}] 标题:${r.title || ''}${r.clauseNo ? ' ' + r.clauseNo : ''}  来源URL:${r.url || ''}`);
-    lines.push(`正文片段:"${(r.quote || r.content || '').slice(0, 1200)}"`);
+    lines.push(`正文片段:"${(r.quote || r.content || '').slice(0, 2500)}"`);
     lines.push('');
   });
   lines.push(`# 审查模式:${mode === 'full' ? '全文体检(对内规每一条都要核对,尽量全覆盖)' : '快速(只输出明确风险点)'}`);

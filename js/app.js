@@ -5,6 +5,7 @@ import { parseFile } from './parse.js';
 import { searchRegulations } from './search.js';
 import { runReview, extractQueries } from './review.js';
 import { renderReport } from './report.js';
+import { selectLibraryClauses } from './lawlib.js';
 
 const $ = (sel) => document.querySelector(sel);
 let currentStep = 1;
@@ -169,7 +170,6 @@ async function searchAll(queries, settings, restrict) {
 async function runAutoFlow() {
   const settings = getSettings();
   if (!settings.modelKey) { toast('请先在「设置」中填写 AI 模型 API Key', true); openSettings(); return; }
-  if (!settings.searchKey) { toast('请先在「设置」中填写联网搜索 API Key', true); openSettings(); return; }
   if (state.doc.status !== 'ready' || !state.doc.text) { toast('请先上传或粘贴制度文件', true); return; }
 
   const next = $('#btn-next');
@@ -187,24 +187,44 @@ async function runAutoFlow() {
     }
     setLine(l1, 'done', '已确定 ' + queries.length + ' 个检索方向:' + queries.slice(0, 5).join(' / '));
 
-    // 2) 联网检索(优先权威来源,空则放宽)
-    let l2 = runLine('正在权威立法 / 监管来源中联网检索…');
-    let regs = await searchAll(queries, settings, true);
-    if (regs.length === 0) {
-      setLine(l2, 'busy', '权威来源未命中,放宽范围再检索…');
-      regs = await searchAll(queries, settings, false);
+    // 2a) 内置权威法规库(底座)
+    const lLib = runLine('正在匹配内置权威法规库…');
+    let libRegs = [];
+    try {
+      libRegs = await selectLibraryClauses(state.doc.text, queries, 50);
+      setLine(lLib, 'done', '命中内置法规库 ' + libRegs.length + ' 条条款');
+    } catch (e) {
+      setLine(lLib, 'err', '法规库加载失败:' + (e.message || e));
     }
+
+    // 2b) 联网补充(可选;填了搜索 Key 才走)
+    let webRegs = [];
+    if (settings.searchKey) {
+      const lWeb = runLine('正在联网补充检索新规 / 冷门规…');
+      try {
+        webRegs = await searchAll(queries, settings, true);
+        if (webRegs.length === 0) webRegs = await searchAll(queries, settings, false);
+        setLine(lWeb, 'done', '联网补充 ' + webRegs.length + ' 条');
+      } catch (e) {
+        setLine(lWeb, 'err', '联网补充失败(不影响库内审查):' + (e.message || e));
+      }
+    }
+
+    // 合并:库为底座,联网按 URL 去重补充
+    const regs = libRegs.slice();
+    const libUrls = new Set(libRegs.map((r) => r.url));
+    webRegs.forEach((w) => { if (w.url && !libUrls.has(w.url)) regs.push(w); });
+
     if (regs.length === 0) {
-      setLine(l2, 'err', '未检索到相关法规。请检查「联网搜索 Key / 转发前缀」,或改用更具体的制度文本。');
+      runLine('未匹配到任何法规。请确认法规库已加载,或在「设置」中填写联网搜索 Key 作补充。', 'err');
       next.disabled = false;
       next.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> 重试';
       return;
     }
     state.regs = regs;
-    setLine(l2, 'done', '已纳入 ' + regs.length + ' 部权威法规');
 
     // 3) AI 审查
-    const l3 = runLine('AI 正在逐条审查(对照 ' + regs.length + ' 部法规)…');
+    const l3 = runLine('AI 正在逐条审查(对照 ' + regs.length + ' 条法规)…');
     reviewCount++;
     state.round = reviewCount;
     state.mode = 'fast';
@@ -232,16 +252,26 @@ async function runAutoFlow() {
 function renderBasis(regs) {
   const el = $('#review-basis');
   if (!regs || !regs.length) { el.innerHTML = ''; return; }
-  const items = regs.map((r) =>
-    '<li>' +
-      (r.url
-        ? '<a class="lk" href="' + esc(r.url) + '" target="_blank" rel="noopener">' + esc(r.title) + ' <i class="ti ti-external-link" aria-hidden="true"></i></a>'
-        : esc(r.title)) +
-      (r.source ? ' <span class="basis-src">' + esc(r.source) + '</span>' : '') +
-    '</li>'
-  ).join('');
+  // 按法规分组(同一部法规的多条条款合并为一行)
+  const byReg = new Map();
+  regs.forEach((r) => {
+    const key = r.title || r.source || '其他';
+    if (!byReg.has(key)) byReg.set(key, { title: key, url: r.url, origin: r.origin, clauses: [] });
+    if (r.clauseNo) byReg.get(key).clauses.push(r.clauseNo);
+  });
+  const items = [...byReg.values()].map((g) => {
+    const originTag = g.origin === 'lib'
+      ? '<span class="basis-src basis-lib">内置库</span>'
+      : '<span class="basis-src basis-web">联网</span>';
+    const cnt = g.clauses.length ? ' <span class="basis-src">' + g.clauses.length + ' 条</span>' : '';
+    return '<li>' +
+      (g.url
+        ? '<a class="lk" href="' + esc(g.url) + '" target="_blank" rel="noopener">' + esc(g.title) + ' <i class="ti ti-external-link" aria-hidden="true"></i></a>'
+        : esc(g.title)) +
+      cnt + ' ' + originTag + '</li>';
+  }).join('');
   el.innerHTML =
-    '<details class="basis" open><summary><i class="ti ti-books" aria-hidden="true"></i> 审查依据:本次自动纳入 ' + regs.length + ' 部权威法规(点开查看 / 核对来源)</summary>' +
+    '<details class="basis" open><summary><i class="ti ti-books" aria-hidden="true"></i> 审查依据:本次纳入 ' + byReg.size + ' 部法规、' + regs.length + ' 条条款(点开查看 / 核对来源)</summary>' +
     '<ul class="basis-list">' + items + '</ul></details>';
 }
 
