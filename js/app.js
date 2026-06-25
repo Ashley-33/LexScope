@@ -347,6 +347,19 @@ function buildCtx() {
   };
 }
 
+// ---------- 打印 / 另存为 PDF:给保存的文件预填友好文件名 ----------
+function bindPrintFilename() {
+  let orig = '';
+  window.addEventListener('beforeprint', () => {
+    orig = document.title;
+    const name = (state.doc.name || '审查报告').replace(/\.[^.]+$/, '');
+    let date = '';
+    try { date = new Date().toLocaleDateString('zh-CN').replace(/\//g, '-'); } catch (e) { /* 忽略 */ }
+    document.title = 'LexScope审查报告-' + name + (date ? '-' + date : '');
+  });
+  window.addEventListener('afterprint', () => { if (orig) document.title = orig; });
+}
+
 // ---------- 导航 ----------
 function bindNav() {
   $('#btn-next').addEventListener('click', () => { if (currentStep === 1) runAutoFlow(); });
@@ -364,6 +377,7 @@ function init() {
   bindSettings();
   bindUpload();
   bindNav();
+  bindPrintFilename();
   gotoStep(1);
   const s = getSettings();
   if (!s.modelKey || !s.searchKey) openSettings();
