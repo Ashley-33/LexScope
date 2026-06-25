@@ -31,12 +31,20 @@ function loadSettingsToForm() {
   $('#set-search-key').value = s.searchKey;
   $('#set-proxy').value = s.proxy;
 }
-function openSettings() { $('#settings').hidden = false; loadSettingsToForm(); }
+function openSettings() { $('#settings-overlay').hidden = false; loadSettingsToForm(); }
+function closeSettings() { $('#settings-overlay').hidden = true; }
 function bindSettings() {
   $('#btn-settings').addEventListener('click', () => {
-    const p = $('#settings');
-    p.hidden = !p.hidden;
-    if (!p.hidden) loadSettingsToForm();
+    if ($('#settings-overlay').hidden) openSettings(); else closeSettings();
+  });
+  $('#btn-close-settings').addEventListener('click', closeSettings);
+  // 点遮罩空白处关闭(只在点到遮罩本身、而非弹窗内部时)
+  $('#settings-overlay').addEventListener('click', (e) => {
+    if (e.target === $('#settings-overlay')) closeSettings();
+  });
+  // Esc 关闭
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('#settings-overlay').hidden) closeSettings();
   });
   $('#btn-save-settings').addEventListener('click', () => {
     saveSettings({
@@ -47,9 +55,8 @@ function bindSettings() {
       searchKey: $('#set-search-key').value.trim(),
       proxy: $('#set-proxy').value.trim(),
     });
-    const tip = $('#settings-saved');
-    tip.hidden = false;
-    setTimeout(() => { tip.hidden = true; }, 1800);
+    toast('设置已保存');
+    closeSettings();
   });
 }
 

@@ -82,6 +82,17 @@ h1, h2, h3 { font-weight: 600; margin: 0; }
 .settings-actions { margin-top: 16px; display: flex; align-items: center; gap: 12px; }
 .saved-tip { color: var(--success); font-size: 13px; }
 
+/* 设置弹层(modal) */
+.modal-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(18, 24, 33, 0.45); display: flex; align-items: flex-start; justify-content: center; padding: 56px 20px; overflow-y: auto; }
+.modal-overlay[hidden] { display: none; }
+.modal-dialog { width: 100%; max-width: 620px; margin: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28); animation: modalIn .16s ease; }
+@keyframes modalIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+.modal-dialog .panel-head { align-items: center; margin-bottom: 6px; }
+.modal-close { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 20px; line-height: 1; padding: 4px; border-radius: 6px; display: inline-flex; }
+.modal-close:hover { background: var(--surface-2); color: var(--text); }
+.settings-hint { color: var(--text-3); font-size: 13px; margin: 0 0 14px; }
+.settings-hint i { vertical-align: -2px; margin-right: 3px; }
+
 .key-help { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
 .key-help summary { cursor: pointer; font-size: 13px; color: var(--link); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
 .key-help summary::-webkit-details-marker { display: none; }

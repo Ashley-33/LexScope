@@ -26,12 +26,14 @@
     </div>
   </header>
 
-  <!-- 设置面板 -->
-  <section id="settings" class="settings panel" hidden>
+  <!-- 设置弹层 -->
+  <div id="settings-overlay" class="modal-overlay" hidden>
+  <section id="settings" class="settings modal-dialog" role="dialog" aria-modal="true" aria-label="密钥设置">
     <div class="panel-head">
       <h2>密钥设置</h2>
-      <span class="hint"><i class="ti ti-lock" aria-hidden="true"></i> 仅存于本浏览器(localStorage),平台不上传、不留存。</span>
+      <button id="btn-close-settings" class="modal-close" aria-label="关闭"><i class="ti ti-x" aria-hidden="true"></i></button>
     </div>
+    <p class="settings-hint"><i class="ti ti-lock" aria-hidden="true"></i> 仅存于本浏览器(localStorage),平台不上传、不留存。</p>
     <div class="settings-grid">
       <label>AI 模型接口地址
         <input id="set-endpoint" type="text" placeholder="https://api.deepseek.com/v1/chat/completions" />
@@ -68,10 +70,10 @@
     </details>
 
     <div class="settings-actions">
-      <button id="btn-save-settings" class="btn btn-primary"><i class="ti ti-device-floppy" aria-hidden="true"></i> 保存</button>
-      <span id="settings-saved" class="saved-tip" hidden>已保存</span>
+      <button id="btn-save-settings" class="btn btn-primary"><i class="ti ti-device-floppy" aria-hidden="true"></i> 保存并关闭</button>
     </div>
   </section>
+  </div>
 
   <!-- 步骤条 -->
   <nav class="stepper" aria-label="流程步骤">
