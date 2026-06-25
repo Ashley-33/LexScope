@@ -44,15 +44,15 @@
       <label>AI 模型 API Key
         <input id="set-model-key" type="password" placeholder="sk-..." autocomplete="off" />
       </label>
-      <label>联网搜索服务
+      <label>联网搜索服务(可选)
         <select id="set-search-provider">
           <option value="tavily">Tavily</option>
           <option value="serper">Serper (google)</option>
           <option value="bing">Bing Web Search</option>
         </select>
       </label>
-      <label>联网搜索 API Key
-        <input id="set-search-key" type="password" placeholder="tvly-..." autocomplete="off" />
+      <label>联网搜索 API Key(可选,留空仅用内置法规库)
+        <input id="set-search-key" type="password" placeholder="不填也能审查;补搜新规时才用到" autocomplete="off" />
       </label>
       <label>转发前缀(可选,绕过 CORS 时用)
         <input id="set-proxy" type="text" placeholder="留空则浏览器直连" />
