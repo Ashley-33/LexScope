@@ -110,7 +110,7 @@ export function renderReport(root, result, ctx) {
     '</div></div>';
   // 指纹
   html += '<div class="fingerprint"><i class="ti ti-fingerprint" aria-hidden="true"></i> ' +
-    esc(ctx.fingerprint || '') + ' · ' + esc(ctx.modelName || '') + ' · 第' + esc(ctx.round || 1) + '轮 · ' +
+    esc(ctx.fingerprint || '') + ' · ' + esc(ctx.modelName || '') + ' · ' +
     esc(ctx.fileName || '') + '</div>';
   // 处置汇总(采纳/忽略留痕,随报告导出)
   if (findings.length) html += '<div id="decision-summary" class="decision-summary"></div>';

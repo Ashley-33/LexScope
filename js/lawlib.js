@@ -58,10 +58,12 @@ export async function selectLibraryClauses(docText, queries, limit = 50, categor
   return scored.slice(0, limit).map((x) => ({
     id: 'L' + (++seq),
     title: x.reg.short_name || x.reg.name,
+    fullName: x.reg.name,
     clauseNo: x.c.no,
     quote: x.c.text,
     url: x.reg.source_url,
     source: x.reg.short_name || x.reg.name,
+    version_date: x.reg.version_date || '',
     origin: 'lib',
     selected: true,
     verified: true,

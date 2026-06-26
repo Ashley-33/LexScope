@@ -108,6 +108,16 @@ h1, h2, h3 { font-weight: 600; margin: 0; }
 .help i { font-size: 13px; vertical-align: -1px; }
 .help:hover { opacity: 1; }
 
+/* 法规更新告警 */
+.btn-alerts { color: var(--danger); }
+.alert-count { background: var(--danger); color: #fff; border-radius: 9px; padding: 0 6px; font-size: 11px; font-weight: 700; min-width: 16px; display: inline-block; text-align: center; }
+.alert-item { border: 1px solid var(--border); border-left: 3px solid var(--warning); border-radius: var(--radius-sm); padding: 10px 13px; margin-bottom: 8px; }
+.alert-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.alert-name i { color: var(--warning); margin-right: 3px; }
+.alert-ver { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+.alert-note { font-size: 12px; color: var(--text-3); margin-top: 3px; line-height: 1.6; }
+.alert-ts { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
 .key-help { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
 .key-help summary { cursor: pointer; font-size: 13px; color: var(--link); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
 .key-help summary::-webkit-details-marker { display: none; }

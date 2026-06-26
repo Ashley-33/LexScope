@@ -17,6 +17,9 @@
       </span>
     </div>
     <div class="topbar-actions">
+      <button id="btn-alerts" class="btn btn-ghost btn-alerts" aria-label="法规更新告警" hidden>
+        <i class="ti ti-bell" aria-hidden="true"></i> 更新告警 <span id="alert-count" class="alert-count">0</span>
+      </button>
       <button id="btn-help" class="btn btn-ghost" aria-label="帮助">
         <i class="ti ti-help-circle" aria-hidden="true"></i> 帮助
       </button>
@@ -119,6 +122,21 @@
       <li><b>【返回为空 / 返回异常 / 解析失败】</b>:模型没按要求输出,重试或改用 deepseek-reasoner。</li>
       <li><b>【未配置搜索 Key / 搜索 Key 无效 / 搜索网络错误】</b>:联网搜索可选,留空仅用内置库即可。</li>
     </ul>
+  </section>
+  </div>
+
+  <!-- 法规更新告警弹层(纯本地记录)-->
+  <div id="update-overlay" class="modal-overlay" hidden>
+  <section class="modal-dialog" role="dialog" aria-modal="true" aria-label="法规更新告警">
+    <div class="panel-head">
+      <h2><i class="ti ti-bell" aria-hidden="true"></i> 法规更新告警</h2>
+      <button id="btn-close-update" class="modal-close" aria-label="关闭"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+    <p class="settings-hint">系统在审查时联网核查发现:下列库内法规<b>疑似已有新版本</b>,请<b>联系管理员核实并更新法规库</b>。(本提醒仅记录在你本地浏览器,不上传)</p>
+    <div id="update-list"></div>
+    <div class="settings-actions">
+      <button id="btn-clear-update" class="btn"><i class="ti ti-trash" aria-hidden="true"></i> 清空告警</button>
+    </div>
   </section>
   </div>
 

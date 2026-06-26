@@ -123,6 +123,37 @@ export async function reviewCritic({ docText, regs, existing, settings, round = 
 }
 
 /**
+ * 时效核查:根据"库内版本"与联网检索摘要,判断各库内法规是否疑似有更新版本。
+ * @param {Object} p
+ * @param {Array} p.items  [{name, version_date, snippets:[{title,content,url}]}]
+ * @param {Object} p.settings
+ * @returns {Promise<Array>} [{name, found_version, note}] —— 仅疑似有新版的
+ */
+export async function judgeFreshness({ items, settings }) {
+  const s = settings || {};
+  const modelKey = (s.modelKey || '').trim();
+  if (!modelKey || !Array.isArray(items) || !items.length) return [];
+  const url = s.proxy ? s.proxy + (s.modelEndpoint || '') : (s.modelEndpoint || '');
+  const list = items.map((it, i) =>
+    `${i + 1}. 法规:${it.name}\n   库内版本:${it.version_date || '未知'}\n   检索摘要:${(it.snippets || []).map((sn) => (sn.title || '') + ' ' + (sn.content || '')).join(' | ').slice(0, 900)}`
+  ).join('\n\n');
+  const sys = '你是法规时效核查员。根据每部法规的"库内版本"与"检索摘要",判断是否【疑似存在比库内版本更新的、现行有效的修订版本】。\n- 仅当摘要中出现明确更晚的发布/修订/施行年份(晚于库内版本)时才判 suspected_newer=true;不确定一律 false,宁可不报、避免误扰。\n- found_version 填你从摘要看到的疑似新版日期或文号(没有则留空)。\n严格只输出 JSON:{"alerts":[{"name":"...","suspected_newer":true,"found_version":"...","note":"一句话依据"}]}';
+  const base = { model: s.modelName || '', temperature: 0.1, max_tokens: 1500, messages: [{ role: 'system', content: sys }, { role: 'user', content: '待核查法规:\n\n' + list }] };
+  let content;
+  try {
+    content = await callModel(url, modelKey, { ...base, response_format: { type: 'json_object' } });
+  } catch (err) {
+    if (err && err._retryWithoutResponseFormat) content = await callModel(url, modelKey, base);
+    else return [];
+  }
+  let obj;
+  try { obj = extractJSON(content); } catch (e) { return []; }
+  const alerts = Array.isArray(obj && obj.alerts) ? obj.alerts : [];
+  return alerts.filter((a) => a && a.suspected_newer)
+    .map((a) => ({ name: a.name, found_version: a.found_version || '', note: a.note || '' }));
+}
+
+/**
  * 让模型读内规,提取用于联网检索"外规"的检索词(法律法规名 + 主题)。
  * @param {Object} p
  * @param {string} p.docText   内规全文

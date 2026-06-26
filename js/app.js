@@ -3,7 +3,7 @@ import { state, nextRegId } from './state.js';
 import { getSettings, saveSettings, LAW_DOMAINS } from './config.js';
 import { parseFile } from './parse.js';
 import { searchRegulations } from './search.js';
-import { runReview, extractQueries, reviewCritic } from './review.js';
+import { runReview, extractQueries, reviewCritic, judgeFreshness } from './review.js';
 import { renderReport } from './report.js';
 import { selectLibraryClauses } from './lawlib.js';
 
@@ -37,7 +37,6 @@ function recomputeSummary(findings) {
 
 const $ = (sel) => document.querySelector(sel);
 let currentStep = 1;
-let reviewCount = 0;
 
 // ---------- 通用提示 ----------
 let toastTimer = null;
@@ -281,7 +280,7 @@ async function runAutoFlow() {
     // 2b) 自动联网补全(库未覆盖的相关法规;配了搜索 Key 才走,没配自动跳过)
     let webRegs = [];
     if (settings.searchKey) {
-      const lWeb = runLine('正在自动联网补全(库未覆盖的相关法规)…');
+      const lWeb = runLine('正在全网检索,复查内置库未覆盖的相关法规…');
       try {
         webRegs = await searchAll(queries, settings, true);
         if (!webRegs.length) webRegs = await searchAll(queries, settings, false);
@@ -297,20 +296,18 @@ async function runAutoFlow() {
     snapBar(26);
 
     // 3) AI 审查(第一遍:全文体检)
-    reviewCount++;
-    state.round = reviewCount;
     state.mode = 'full';
     const l3 = runLine('AI 正在逐条审查(对照 ' + regs.length + ' 条法规)…');
     creepTo(60);
-    const result = await runReview({ docText: state.doc.text, regs, mode: state.mode, settings, round: state.round });
+    const result = await runReview({ docText: state.doc.text, regs, mode: state.mode, settings });
     setLine(l3, 'done', '初审完成,发现 ' + (result.findings || []).length + ' 个风险点');
     snapBar(64);
 
     // 3b) 查漏复审(第二遍:专找遗漏)
-    const lc = runLine('正在二次查漏复审(专找被忽略的遗漏)…');
+    const lc = runLine('正在二次复审,补查可能遗漏的合规要点…');
     creepTo(90);
     try {
-      const extra = await reviewCritic({ docText: state.doc.text, regs, existing: result.findings, settings, round: state.round });
+      const extra = await reviewCritic({ docText: state.doc.text, regs, existing: result.findings, settings });
       const before = (result.findings || []).length;
       result.findings = mergeFindings(result.findings, extra.findings);
       result.summary = recomputeSummary(result.findings);
@@ -334,6 +331,8 @@ async function runAutoFlow() {
     progDone();
     gotoStep(3);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 非阻塞:报告已出,后台联网核查库内法规时效,疑似有新版则弹窗告警
+    checkFreshness(result, settings);
   } catch (e) {
     runLine('出错:' + (e.message || String(e)), 'err');
     progDone();
@@ -414,7 +413,7 @@ function passCardHTML(regs) {
     '<div class="pass-head"><i class="ti ti-shield-check" aria-hidden="true"></i> 审查通过 · 未发现与现行法规冲突的条款</div>' +
     '<p class="pass-sub">已对照以下 ' + (regs ? regs.length : 0) + ' 部法律法规逐条核对,你的制度在这些规定下未见明显风险。</p>' +
     (list ? '<ul class="pass-list">' + list + '</ul>' : '') +
-    '<p class="pass-note"><i class="ti ti-info-circle" aria-hidden="true"></i> 本结论以本次检索到的法规为准;如需更全面,可用下方「补搜并重审」纳入更多法规。</p>' +
+    '<p class="pass-note"><i class="ti ti-info-circle" aria-hidden="true"></i> 本结论以本次检索到的法规为准(已含内置库 + 自动联网补全);如制度新增章节,建议重新上传审查。</p>' +
   '</div>';
 }
 // 若本轮无风险点,把报告里默认的「未发现明显风险点」替换为正向反馈卡
@@ -498,36 +497,10 @@ function buildCtx() {
     docText: state.doc.text,
     fileName: state.doc.name,
     modelName: getSettings().modelName,
-    round: state.round,
     fingerprint: makeFingerprint(),
     regCount: (state.regs || []).length,
     onAdopt: () => {},
     onIgnore: () => {},
-    onReReview: async (keywords) => {
-      const settings = getSettings();
-      toast('正在补搜并重审…');
-      try {
-        const more = await searchAll(
-          (keywords && keywords.length) ? keywords : ['相关 法律 法规 监管办法'],
-          settings, true
-        );
-        const seen = new Set((state.regs || []).map((r) => r.url));
-        more.forEach((r) => { if (r.url && !seen.has(r.url)) { seen.add(r.url); state.regs.push(r); } });
-        reviewCount++;
-        state.round = reviewCount;
-        const result = await runReview({ docText: state.doc.text, regs: state.regs, mode: state.mode || 'fast', settings, round: state.round });
-        state.result = result;
-        renderBasis(state.regs);
-        renderReport($('#report-root'), result, buildCtx());
-        applyEmptyState(result);
-        renderCoverage(result.coverage);
-        wireExportButton();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        toast('已补搜并重审(共 ' + state.regs.length + ' 部法规)');
-      } catch (e) {
-        toast('补搜重审失败:' + (e.message || String(e)), true);
-      }
-    },
   };
 }
 
@@ -549,8 +522,6 @@ function resetAll() {
   state.doc = { name: '', text: '', status: 'empty' };
   state.regs = [];
   state.result = null;
-  state.round = 1;
-  reviewCount = 0;
   const fs = $('#file-status'); fs.hidden = true; fs.innerHTML = '';
   $('#file-input').value = '';
   $('#paste-text').value = '';
@@ -570,6 +541,74 @@ function bindRestart() {
   });
 }
 
+// ---------- 法规时效核查 + 本地更新告警 ----------
+function freshCacheGet() { try { return JSON.parse(localStorage.getItem('cr_freshness_cache') || '{}'); } catch (e) { return {}; } }
+function freshCacheSet(c) { try { localStorage.setItem('cr_freshness_cache', JSON.stringify(c)); } catch (e) { /* 忽略 */ } }
+function getUpdateAlerts() { try { return JSON.parse(localStorage.getItem('cr_update_alerts') || '[]'); } catch (e) { return []; } }
+function addUpdateAlerts(alerts) {
+  const map = new Map(getUpdateAlerts().map((a) => [a.name, a]));
+  let ts = ''; try { ts = new Date().toLocaleString('zh-CN'); } catch (e) { /* 忽略 */ }
+  alerts.forEach((a) => map.set(a.name, { name: a.name, found_version: a.found_version || '', note: a.note || '', ts }));
+  try { localStorage.setItem('cr_update_alerts', JSON.stringify([...map.values()])); } catch (e) { /* 忽略 */ }
+  updateAlertBadge();
+}
+function clearUpdateAlerts() { try { localStorage.removeItem('cr_update_alerts'); } catch (e) { /* 忽略 */ } renderUpdateList(); updateAlertBadge(); }
+function updateAlertBadge() {
+  const n = getUpdateAlerts().length;
+  const cnt = $('#alert-count'); if (cnt) cnt.textContent = n;
+  const btn = $('#btn-alerts'); if (btn) btn.hidden = (n === 0);
+}
+function renderUpdateList() {
+  const el = $('#update-list'); if (!el) return;
+  const alerts = getUpdateAlerts();
+  if (!alerts.length) { el.innerHTML = '<p class="empty" style="padding:18px 0">暂无更新告警</p>'; return; }
+  el.innerHTML = alerts.map((a) =>
+    '<div class="alert-item"><div class="alert-name"><i class="ti ti-alert-triangle" aria-hidden="true"></i> ' + esc(a.name) + ' —— 疑似有新版本</div>' +
+    (a.found_version ? '<div class="alert-ver">疑似新版:' + esc(a.found_version) + '</div>' : '') +
+    (a.note ? '<div class="alert-note">' + esc(a.note) + '</div>' : '') +
+    (a.ts ? '<div class="alert-ts">核查时间:' + esc(a.ts) + '</div>' : '') + '</div>'
+  ).join('');
+}
+function showUpdatePopup() { $('#update-overlay').hidden = false; renderUpdateList(); }
+function bindAlerts() {
+  const ov = $('#update-overlay');
+  $('#btn-alerts').addEventListener('click', () => { ov.hidden = false; renderUpdateList(); });
+  $('#btn-close-update').addEventListener('click', () => { ov.hidden = true; });
+  $('#btn-clear-update').addEventListener('click', clearUpdateAlerts);
+  ov.addEventListener('click', (e) => { if (e.target === ov) ov.hidden = true; });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !ov.hidden) ov.hidden = true; });
+  updateAlertBadge();
+}
+// 审查完成后(非阻塞)联网核查本次用到的库内法规是否疑似有新版
+async function checkFreshness(result, settings) {
+  if (!settings.searchKey || !settings.modelKey) return;
+  const libRegs = (state.regs || []).filter((r) => r.origin === 'lib');
+  if (!libRegs.length) return;
+  const byUrl = new Map(libRegs.map((r) => [r.url, r]));
+  const seen = new Set(); const cited = [];
+  (result.findings || []).forEach((f) => {
+    if (f && !f.web && f.source_url && byUrl.has(f.source_url)) {
+      const r = byUrl.get(f.source_url);
+      if (!seen.has(r.title)) { seen.add(r.title); cited.push(r); }
+    }
+  });
+  let toCheck = cited.length ? cited : libRegs.slice(0, 4);
+  const cache = freshCacheGet(); const now = Date.now();
+  toCheck = toCheck.filter((r) => !cache[r.title] || (now - cache[r.title]) > 7 * 864e5).slice(0, 5);
+  if (!toCheck.length) return;
+  const items = [];
+  for (const r of toCheck) {
+    let snippets = [];
+    try { snippets = await searchRegulations((r.fullName || r.title) + ' 最新版本 修订 现行有效', settings, {}); } catch (e) { /* 忽略 */ }
+    items.push({ name: r.title, version_date: r.version_date || '', snippets: (snippets || []).slice(0, 3) });
+    cache[r.title] = now;
+  }
+  freshCacheSet(cache);
+  let alerts = [];
+  try { alerts = await judgeFreshness({ items, settings }); } catch (e) { /* 忽略 */ }
+  if (alerts.length) { addUpdateAlerts(alerts); showUpdatePopup(); }
+}
+
 // ---------- 导航 ----------
 function bindNav() {
   $('#btn-next').addEventListener('click', () => { if (currentStep === 1) runAutoFlow(); });
@@ -587,6 +626,7 @@ function help(tip) { return '<span class="help" title="' + esc(tip) + '"><i clas
 function init() {
   bindSettings();
   bindHelp();
+  bindAlerts();
   bindUpload();
   bindNav();
   bindRestart();
