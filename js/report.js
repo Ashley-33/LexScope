@@ -72,21 +72,12 @@ function findingBlock(f) {
   '</div>';
 }
 
-function gapCard(g) {
-  const kws = Array.isArray(g.keywords) ? g.keywords : [];
-  return '<div class="gap-card">' +
-    '<div class="gt"><i class="ti ti-search" aria-hidden="true"></i> 查漏提示(供人工进一步核查)</div>' +
-    '<div class="gap-row"><span>' + esc(g.rationale || '') +
-      (kws.length ? ' 关键词:' + esc(kws.join('、')) : '') + '</span></div></div>';
-}
-
 export function renderReport(root, result, ctx) {
   if (!root) throw new Error('渲染报告失败:未提供容器节点');
   result = result || {};
   ctx = ctx || {};
   const summary = result.summary || {};
   const findings = Array.isArray(result.findings) ? result.findings : [];
-  const gaps = Array.isArray(result.suggestedSearches) ? result.suggestedSearches : [];
 
   const score = clampScore(summary.score);
   const ringColor = score < 60 ? '#c0392b' : (score < 80 ? '#9a6700' : '#1d7a55');
@@ -122,12 +113,6 @@ export function renderReport(root, result, ctx) {
   } else {
     html += '<div class="findings-list">';
     findings.forEach((f) => { html += findingBlock(f); });
-    html += '</div>';
-  }
-  // 查漏提示
-  if (gaps.length) {
-    html += '<div class="gaps">';
-    gaps.forEach((g) => { html += gapCard(g); });
     html += '</div>';
   }
   root.innerHTML = html;

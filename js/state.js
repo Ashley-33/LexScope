@@ -7,8 +7,7 @@ export const state = {
   // 字段: { id, title, clauseNo, quote, url, source, origin:'search'|'manual', selected, verified }
   regs: [],
   mode: 'fast',           // fast | full
-  result: null,           // { summary, findings, suggestedSearches }
-  round: 1,
+  result: null,           // { summary, findings, coverage }
   reviewing: false,
 };
 

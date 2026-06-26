@@ -15,7 +15,7 @@ const RISK_TYPES = ['conflict', 'omission', 'ultra_vires', 'ambiguous', 'wording
  * @param {string} p.mode               'fast' | 'full'
  * @param {Object} p.settings           { modelEndpoint, modelName, modelKey, proxy }
  * @param {number} [p.round=1]          当前审查轮次
- * @returns {Promise<{summary:Object, findings:Array, suggestedSearches:Array}>}
+ * @returns {Promise<{summary:Object, findings:Array, coverage:Array}>}
  */
 export async function runReview({ docText, regs, mode, settings, round = 1 }) {
   const s = settings || {};
@@ -293,7 +293,7 @@ function modelErrorMessage(status, raw) {
 }
 
 /**
- * 规整模型返回:补 round、反幻觉校验、summary 兜底统计与评分、suggestedSearches。
+ * 规整模型返回:补 round、反幻觉校验、summary 兜底统计与评分、coverage。
  */
 function normalize(obj, regs, round) {
   // ── findings ──
@@ -331,10 +331,6 @@ function normalize(obj, regs, round) {
   // ── summary ──
   const summary = buildSummary(obj.summary, findings);
 
-  // ── suggestedSearches ──
-  let suggestedSearches = obj.suggested_searches || obj.suggestedSearches || [];
-  if (!Array.isArray(suggestedSearches)) suggestedSearches = [];
-
   // ── coverage(审查覆盖·逐条对照)──
   let coverage = obj.coverage || [];
   if (!Array.isArray(coverage)) coverage = [];
@@ -350,7 +346,7 @@ function normalize(obj, regs, round) {
     c.note = fix(c.note); c.topic = fix(c.topic);
   });
 
-  return { summary, findings, suggestedSearches, coverage };
+  return { summary, findings, coverage };
 }
 
 /**
