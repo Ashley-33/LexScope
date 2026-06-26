@@ -155,10 +155,15 @@ export async function extractQueries({ docText, settings }) {
   try {
     obj = extractJSON(content);
   } catch (e) {
-    return [];
+    return { queries: [], categories: [] };
   }
-  const qs = Array.isArray(obj && obj.queries) ? obj.queries : [];
-  return qs.filter((q) => typeof q === 'string' && q.trim()).map((q) => q.trim()).slice(0, 7);
+  const qs = Array.isArray(obj && obj.queries)
+    ? obj.queries.filter((q) => typeof q === 'string' && q.trim()).map((q) => q.trim()).slice(0, 7)
+    : [];
+  const cats = Array.isArray(obj && obj.categories)
+    ? obj.categories.filter((c) => typeof c === 'string' && c.trim()).map((c) => c.trim())
+    : [];
+  return { queries: qs, categories: cats };
 }
 
 /**

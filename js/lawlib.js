@@ -26,13 +26,22 @@ function grams(s) {
  * @param {number} limit 返回条款上限
  * @returns {Promise<Array>} 形如 review/report 所需的 reg 数组(每条=一个法条)
  */
-export async function selectLibraryClauses(docText, queries, limit = 50) {
+export async function selectLibraryClauses(docText, queries, limit = 50, categories = null) {
   const lib = await loadLawLib();
   const ref = (docText || '').slice(0, 5000) + ' ' + (queries || []).join(' ');
   const dg = grams(ref);
 
+  // 适用法域过滤:有传 categories 时,只保留与"适用法域 + 通用"相交的法规
+  const applySet = (Array.isArray(categories) && categories.length)
+    ? new Set([...categories, '通用'])
+    : null;
+
   const scored = [];
   for (const reg of (lib.regulations || [])) {
+    if (applySet) {
+      const regCats = (reg.categories && reg.categories.length) ? reg.categories : ['通用'];
+      if (!regCats.some((c) => applySet.has(c))) continue; // 不在适用法域,跳过
+    }
     for (const c of (reg.clauses || [])) {
       const cg = grams((c.topic || '') + (c.text || ''));
       let overlap = 0;

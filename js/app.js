@@ -217,21 +217,25 @@ async function runAutoFlow() {
   showRun();
 
   try {
-    // 1) 提取检索词
-    const l1 = runLine('正在分析制度,判断它受哪些法律法规约束…');
-    let queries = [];
-    try { queries = await extractQueries({ docText: state.doc.text, settings }); } catch (e) { /* 走兜底 */ }
+    // 1) 适用性判定 + 提取检索词(先判断这份制度属于哪些法域)
+    const l1 = runLine('正在分析制度,判定适用法域…');
+    let queries = [], categories = [];
+    try {
+      const r = await extractQueries({ docText: state.doc.text, settings });
+      queries = r.queries || []; categories = r.categories || [];
+    } catch (e) { /* 走兜底 */ }
     if (!queries.length) {
       queries = [(state.doc.name || '制度').replace(/\.[^.]+$/, '') + ' 法律 法规 监管办法'];
     }
-    setLine(l1, 'done', '已确定 ' + queries.length + ' 个检索方向:' + queries.slice(0, 5).join(' / '));
+    state.categories = categories;
+    setLine(l1, 'done', '适用法域:' + (categories.length ? categories.join(' / ') : '通用') + ' · ' + queries.length + ' 个检索方向');
 
-    // 2) 内置权威法规库(主审查只用库,聚焦去噪;联网走「补搜并重审」按钮)
-    const lLib = runLine('正在匹配内置权威法规库…');
+    // 2) 内置法规库(只在适用法域内检索,避免私募制度错配银行/财务公司条款)
+    const lLib = runLine('正在适用法域内匹配法规库…');
     let regs = [];
     try {
-      regs = await selectLibraryClauses(state.doc.text, queries, 28);
-      setLine(lLib, 'done', '命中内置法规库 ' + regs.length + ' 条条款(联网补充可在报告页点「补搜并重审」)');
+      regs = await selectLibraryClauses(state.doc.text, queries, 28, categories);
+      setLine(lLib, 'done', '命中 ' + regs.length + ' 条条款(限于适用法域:' + (categories.length ? categories.join('/') : '全部') + ')');
     } catch (e) {
       setLine(lLib, 'err', '法规库加载失败:' + (e.message || e));
     }
