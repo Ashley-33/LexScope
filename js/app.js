@@ -442,10 +442,7 @@ async function exportPdfDownload() {
     if (!window.html2pdf) {
       await loadScript('https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js');
     }
-    const name = (state.doc.name || '审查报告').replace(/\.[^.]+$/, '');
-    let date = '';
-    try { date = new Date().toLocaleDateString('zh-CN').replace(/\//g, '-'); } catch (e) { /* 忽略 */ }
-    const filename = 'LexScope审查报告-' + name + (date ? '-' + date : '') + '.pdf';
+    const filename = reportFileBase() + '.pdf';
     stage.classList.add('exporting');
     await window.html2pdf().set({
       margin: [8, 8, 10, 8],
@@ -504,15 +501,29 @@ function buildCtx() {
   };
 }
 
+// ---------- 统一的 PDF 文件名:前缀-原文件名-时间戳 ----------
+function reportFileBase() {
+  // 原文件名:去扩展名 → 去文件系统非法字符 → 折叠空白 → 截断
+  let name = (state.doc.name || '审查报告').replace(/\.[^.]+$/, '');
+  name = name.replace(/[\\/:*?"<>| -]/g, '').replace(/\s+/g, ' ').trim();
+  if (name.length > 40) name = name.slice(0, 40);
+  if (!name) name = '审查报告';
+  // 时间戳:补零、可排序、文件系统安全 —— YYYYMMDD-HHmmss
+  let ts = '';
+  try {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    ts = '' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+  } catch (e) { /* 忽略 */ }
+  return 'LexScope审查报告-' + name + (ts ? '-' + ts : '');
+}
+
 // ---------- 打印 / 另存为 PDF:给保存的文件预填友好文件名 ----------
 function bindPrintFilename() {
   let orig = '';
   window.addEventListener('beforeprint', () => {
     orig = document.title;
-    const name = (state.doc.name || '审查报告').replace(/\.[^.]+$/, '');
-    let date = '';
-    try { date = new Date().toLocaleDateString('zh-CN').replace(/\//g, '-'); } catch (e) { /* 忽略 */ }
-    document.title = 'LexScope审查报告-' + name + (date ? '-' + date : '');
+    document.title = reportFileBase();
   });
   window.addEventListener('afterprint', () => { if (orig) document.title = orig; });
 }
