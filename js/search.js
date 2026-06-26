@@ -14,13 +14,20 @@ function hostname(url) {
   }
 }
 
+// 把搜索 API 的 HTTP 错误规整成带【标签】的标准提示。
+function searchHttpError(provider, status) {
+  if (status === 401 || status === 403) return '【搜索 Key 无效】联网搜索(' + provider + ')鉴权失败,请在「设置」核对搜索 API Key。';
+  if (status === 429) return '【搜索限流】联网搜索(' + provider + ')请求过于频繁,请稍候再试。';
+  return '【搜索失败(' + status + ')】联网搜索(' + provider + ')出错。';
+}
+
 // 包一层 fetch:把网络层异常(多数是浏览器 CORS 拦截)转成可读的中文引导。
 async function safeFetch(url, opts, provider) {
   try {
     return await fetch(url, opts);
   } catch (e) {
     throw new Error(
-      '联网检索失败(' + provider + '):网络错误。多数搜索 API 不允许浏览器跨域(CORS),' +
+      '【搜索网络错误】(' + provider + ')无法连接。多数搜索 API 不允许浏览器跨域(CORS),' +
       '请在「设置」中配置「转发前缀」(指向你的无状态转发,如 Cloudflare Workers)绕过。原始错误:' +
       (e && e.message ? e.message : String(e))
     );
@@ -39,7 +46,7 @@ export async function searchRegulations(query, settings, opts) {
   const includeDomains = (opts && Array.isArray(opts.includeDomains)) ? opts.includeDomains : [];
 
   if (!key) {
-    throw new Error('未配置联网搜索 API Key,请在「设置」中填写');
+    throw new Error('【未配置搜索 Key】请在「设置」填写联网搜索 API Key,或留空仅用内置法规库。');
   }
 
   // 代理用于绕过浏览器 CORS 限制:留空则浏览器直连;
@@ -64,7 +71,7 @@ export async function searchRegulations(query, settings, opts) {
       }),
     }, provider);
     if (!resp.ok) {
-      throw new Error('搜索失败(' + provider + '):HTTP ' + resp.status);
+      throw new Error(searchHttpError(provider, resp.status));
     }
     const data = await resp.json();
     const results = Array.isArray(data.results) ? data.results : [];
@@ -85,7 +92,7 @@ export async function searchRegulations(query, settings, opts) {
       body: JSON.stringify({ q: query, gl: 'cn', hl: 'zh-cn' }),
     }, provider);
     if (!resp.ok) {
-      throw new Error('搜索失败(' + provider + '):HTTP ' + resp.status);
+      throw new Error(searchHttpError(provider, resp.status));
     }
     const data = await resp.json();
     const organic = Array.isArray(data.organic) ? data.organic : [];
@@ -106,7 +113,7 @@ export async function searchRegulations(query, settings, opts) {
       headers: { 'Ocp-Apim-Subscription-Key': key },
     }, provider);
     if (!resp.ok) {
-      throw new Error('搜索失败(' + provider + '):HTTP ' + resp.status);
+      throw new Error(searchHttpError(provider, resp.status));
     }
     const data = await resp.json();
     const webPages =

@@ -21,7 +21,7 @@ export async function runReview({ docText, regs, mode, settings, round = 1 }) {
   const s = settings || {};
   const modelKey = (s.modelKey || '').trim();
   if (!modelKey) {
-    throw new Error('未配置 AI 模型 API Key,请在「设置」中填写');
+    throw new Error('【未配置模型 Key】请在「设置」中填写 AI 模型 API Key(DeepSeek 的 sk- 开头 Key)');
   }
 
   const regList = Array.isArray(regs) ? regs : [];
@@ -58,10 +58,10 @@ export async function runReview({ docText, regs, mode, settings, round = 1 }) {
   try {
     obj = extractJSON(content);
   } catch (e) {
-    throw new Error('模型返回内容无法解析为 JSON:' + (e && e.message ? e.message : String(e)));
+    throw new Error('【解析失败】模型返回的内容无法解析为 JSON(可能未按要求输出),请重试或改用 deepseek-reasoner。');
   }
   if (!obj || typeof obj !== 'object') {
-    throw new Error('模型返回内容不是有效的 JSON 对象');
+    throw new Error('【解析失败】模型返回内容不是有效的 JSON 对象,请重试。');
   }
 
   return normalize(obj, regList, round);
@@ -132,7 +132,7 @@ export async function reviewCritic({ docText, regs, existing, settings, round = 
 export async function extractQueries({ docText, settings }) {
   const s = settings || {};
   const modelKey = (s.modelKey || '').trim();
-  if (!modelKey) throw new Error('未配置 AI 模型 API Key,请在「设置」中填写');
+  if (!modelKey) throw new Error('【未配置模型 Key】请在「设置」中填写 AI 模型 API Key(DeepSeek 的 sk- 开头 Key)');
   const url = s.proxy ? s.proxy + (s.modelEndpoint || '') : (s.modelEndpoint || '');
   const messages = [
     { role: 'system', content: TOPIC_PROMPT },
@@ -179,26 +179,25 @@ async function callModel(url, modelKey, body) {
     });
   } catch (netErr) {
     // 网络层异常(CORS、断网、DNS 等)
-    throw new Error('调用 AI 模型失败(网络错误,可在「设置」中配置代理前缀绕过 CORS):' + (netErr && netErr.message ? netErr.message : String(netErr)));
+    throw new Error('【网络错误】无法连接 AI 模型接口,可能是断网、接口地址有误或浏览器 CORS 拦截。DeepSeek 一般可直连;若接口需代理,请在「设置 → 转发前缀」配置。(' + (netErr && netErr.message ? netErr.message : String(netErr)) + ')');
   }
 
   if (!resp.ok) {
     const raw = await safeText(resp);
-    const msg = extractErrorMessage(raw);
     // 判断是否疑似不支持 response_format
     if (resp.status === 400 && /response_format/i.test(raw || '') && body.response_format) {
       const e = new Error('模型不支持 response_format');
       e._retryWithoutResponseFormat = true;
       throw e;
     }
-    throw new Error(`调用 AI 模型失败(HTTP ${resp.status}):${msg || raw || '无返回内容'}`);
+    throw new Error(modelErrorMessage(resp.status, raw));
   }
 
   let data;
   try {
     data = await resp.json();
   } catch (e) {
-    throw new Error('AI 模型返回内容不是合法 JSON,无法读取');
+    throw new Error('【返回异常】AI 模型返回的不是合法 JSON,无法读取,请重试。');
   }
 
   const content = data
@@ -208,7 +207,7 @@ async function callModel(url, modelKey, body) {
     && data.choices[0].message.content;
 
   if (!content || !String(content).trim()) {
-    throw new Error('AI 模型返回为空,未取得审查结果');
+    throw new Error('【返回为空】AI 模型未返回内容,请重试或更换模型。');
   }
   return content;
 }
@@ -236,6 +235,25 @@ function extractErrorMessage(raw) {
     // 非 JSON,原样返回截断后的文本
   }
   return String(raw).slice(0, 500);
+}
+
+// 把模型接口的各类错误规整成带【标签】的标准提示(便于一眼识别 + 与帮助文档对照)
+function modelErrorMessage(status, raw) {
+  const detail = extractErrorMessage(raw) || '';
+  const r = String(raw || '') + ' ' + detail;
+  if (status === 401 || status === 403 || /authentication|api[_\s-]?key|invalid.*key|unauthor|鉴权|认证/i.test(r))
+    return '【模型 Key 无效】AI 模型 API Key 不正确或已过期。请在「设置」核对:Key 应以 sk- 开头(到 platform.deepseek.com 重新复制),「模型名称」框填 deepseek-reasoner 或 deepseek-chat——不要把模型名误填进 Key 框。';
+  if (status === 402 || /insufficient|balance|余额|欠费|payment required/i.test(r))
+    return '【模型余额不足】DeepSeek 账户余额不足,请登录 platform.deepseek.com 充值后重试。';
+  if (status === 429 || /rate.?limit|too many|频繁|quota/i.test(r))
+    return '【请求过于频繁】触发了模型限流,请稍候片刻再试。';
+  if (status === 404 || /model.*(not.*found|not.*exist|does not exist)|no such model|未找到.*模型/i.test(r))
+    return '【模型名称错误】「设置 → 模型名称」填写有误,请填 deepseek-reasoner 或 deepseek-chat。';
+  if (status === 400)
+    return '【请求被拒(400)】' + (detail || '请检查「设置」里的接口地址与模型名称是否正确。');
+  if (status >= 500)
+    return '【模型服务异常(' + status + ')】AI 服务暂时不可用,请稍后重试。';
+  return '【模型调用失败(' + status + ')】' + (detail || '未知错误');
 }
 
 /**
