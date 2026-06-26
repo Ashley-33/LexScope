@@ -54,6 +54,7 @@ function findingBlock(f) {
   return '<div class="finding" id="card-' + esc(f.id) + '" data-decision="' + esc(f.decision || '') + '">' +
     '<div class="fcap sev-' + sv + '"><span class="fcap-title">' + head + '</span>' +
       '<span class="fcap-right">' +
+        (f.web ? '<span class="web-tag"><i class="ti ti-world" aria-hidden="true"></i> 联网</span>' : '') +
         '<span class="fstamp s-adopt"><i class="ti ti-stamp" aria-hidden="true"></i> 已采纳</span>' +
         '<span class="fstamp s-ignore"><i class="ti ti-ban" aria-hidden="true"></i> 已忽略</span>' +
         '<span class="conf">置信度:' + esc(confLabel(f.confidence)) + (f.need_human_review ? ' · 待复核' : '') +
@@ -73,11 +74,10 @@ function findingBlock(f) {
 
 function gapCard(g) {
   const kws = Array.isArray(g.keywords) ? g.keywords : [];
-  return '<div class="gap-card" data-kw="' + esc(JSON.stringify(kws)) + '">' +
-    '<div class="gt"><i class="ti ti-search" aria-hidden="true"></i> 查漏提示</div>' +
+  return '<div class="gap-card">' +
+    '<div class="gt"><i class="ti ti-search" aria-hidden="true"></i> 查漏提示(供人工进一步核查)</div>' +
     '<div class="gap-row"><span>' + esc(g.rationale || '') +
-      (kws.length ? ' 关键词:' + esc(kws.join('、')) : '') + '</span>' +
-      '<button class="btn gap-re">补搜并重审</button></div></div>';
+      (kws.length ? ' 关键词:' + esc(kws.join('、')) : '') + '</span></div></div>';
 }
 
 export function renderReport(root, result, ctx) {
@@ -174,15 +174,6 @@ function bind(root, ctx, findings) {
     if (ignore) ignore.addEventListener('click', () => apply((f && f.decision === 'ignored') ? '' : 'ignored'));
   });
   updateDecisionSummary(root, findings);
-  root.querySelectorAll('.gap-card').forEach((gc) => {
-    const btn = gc.querySelector('.gap-re');
-    if (!btn) return;
-    btn.addEventListener('click', () => {
-      let kws = [];
-      try { kws = JSON.parse(gc.getAttribute('data-kw') || '[]'); } catch (e) { kws = []; }
-      safe(ctx.onReReview, kws);
-    });
-  });
 }
 function safe(fn, arg) { try { if (typeof fn === 'function') fn(arg); } catch (e) { /* 回调异常不影响渲染 */ } }
 

@@ -278,6 +278,24 @@ async function runAutoFlow() {
     state.regs = regs;
     snapBar(22);
 
+    // 2b) 自动联网补全(库未覆盖的相关法规;配了搜索 Key 才走,没配自动跳过)
+    let webRegs = [];
+    if (settings.searchKey) {
+      const lWeb = runLine('正在自动联网补全(库未覆盖的相关法规)…');
+      try {
+        webRegs = await searchAll(queries, settings, true);
+        if (!webRegs.length) webRegs = await searchAll(queries, settings, false);
+        const libUrls = new Set(regs.map((r) => r.url));
+        webRegs = webRegs.filter((w) => w.url && !libUrls.has(w.url));
+        regs = regs.concat(webRegs);
+        state.regs = regs;
+        setLine(lWeb, 'done', '联网补全 ' + webRegs.length + ' 条(报告中标「联网」,可信度低于库内)');
+      } catch (e) {
+        setLine(lWeb, 'err', '联网补全失败(不影响库内审查):' + (e.message || e));
+      }
+    }
+    snapBar(26);
+
     // 3) AI 审查(第一遍:全文体检)
     reviewCount++;
     state.round = reviewCount;
@@ -301,6 +319,9 @@ async function runAutoFlow() {
       setLine(lc, 'err', '复审跳过(不影响初审结果):' + (e.message || e));
     }
     snapBar(92);
+    // 标记联网来源的发现(报告中标「联网」)
+    const webUrlSet = new Set(webRegs.map((r) => r.url));
+    (result.findings || []).forEach((f) => { if (f && f.source_url && webUrlSet.has(f.source_url)) f.web = true; });
     state.result = result;
 
     // 4) 渲染报告

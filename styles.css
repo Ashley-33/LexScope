@@ -323,6 +323,8 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 .fcap-title { flex: 1; }
 .fcap-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 /* 采纳/忽略盖章(白底描边,印在彩色标题条上,似橡皮章)*/
+.web-tag { display: inline-flex; align-items: center; gap: 3px; background: rgba(255,255,255,.2); border: 1px solid currentColor; border-radius: 5px; padding: 1px 8px; font-size: 11px; font-weight: 600; }
+.web-tag i { font-size: 12px; }
 .fstamp { display: none; align-items: center; gap: 4px; border: 1.5px solid currentColor; border-radius: 5px; padding: 1px 9px; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
 .fstamp i { font-size: 14px; }
 .finding[data-decision="adopted"] .s-adopt { display: inline-flex; }
