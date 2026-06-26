@@ -169,7 +169,34 @@ function iconFor(s) {
   if (s === 'err') return '<i class="ti ti-alert-circle" aria-hidden="true"></i>';
   return '<i class="ti ti-loader-2 spin" aria-hidden="true"></i>';
 }
-function showRun() { const el = $('#run-status'); el.hidden = false; el.innerHTML = ''; }
+// 进度条 + 已用时:模型调用不流式,长阶段用"缓慢爬动"营造进度感
+let _elapsedTimer = null, _creepTimer = null, _runStartMs = 0;
+function setBar(pct) { const b = $('#run-bar'); if (b) b.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+function curBar() { const b = $('#run-bar'); return b ? (parseFloat(b.style.width) || 0) : 0; }
+function creepTo(target) {
+  clearInterval(_creepTimer);
+  _creepTimer = setInterval(() => {
+    const c = curBar();
+    if (c < target - 0.2) setBar(c + Math.max(0.12, (target - c) * 0.025));
+    else clearInterval(_creepTimer);
+  }, 220);
+}
+function snapBar(pct) { clearInterval(_creepTimer); setBar(pct); }
+function updateMeta() {
+  const meta = $('#run-meta'); if (!meta || !_runStartMs) return;
+  const s = Math.floor((Date.now() - _runStartMs) / 1000);
+  meta.textContent = '预计 1–3 分钟(reasoner 模型逐条推理较慢,请耐心等待)· 已用时 ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+function progStart() {
+  setBar(0);
+  _runStartMs = Date.now();
+  clearInterval(_elapsedTimer);
+  _elapsedTimer = setInterval(updateMeta, 1000);
+  updateMeta();
+}
+function progDone() { clearInterval(_creepTimer); clearInterval(_elapsedTimer); }
+
+function showRun() { const el = $('#run-status'); el.hidden = false; el.innerHTML = ''; progStart(); }
 function runLine(text, s) {
   const el = $('#run-status');
   const div = document.createElement('div');
@@ -215,6 +242,7 @@ async function runAutoFlow() {
 
   gotoStep(2); // 进入「分析」步
   showRun();
+  creepTo(14);
 
   try {
     // 1) 适用性判定 + 提取检索词(先判断这份制度属于哪些法域)
@@ -229,6 +257,7 @@ async function runAutoFlow() {
     }
     state.categories = categories;
     setLine(l1, 'done', '适用法域:' + (categories.length ? categories.join(' / ') : '通用') + ' · ' + queries.length + ' 个检索方向');
+    snapBar(16);
 
     // 2) 内置法规库(只在适用法域内检索,避免私募制度错配银行/财务公司条款)
     const lLib = runLine('正在适用法域内匹配法规库…');
@@ -242,21 +271,26 @@ async function runAutoFlow() {
 
     if (regs.length === 0) {
       runLine('未匹配到任何法规。请确认法规库已加载。', 'err');
+      progDone();
       $('#btn-prev').style.visibility = 'visible';
       return;
     }
     state.regs = regs;
+    snapBar(22);
 
     // 3) AI 审查(第一遍:全文体检)
     reviewCount++;
     state.round = reviewCount;
     state.mode = 'full';
     const l3 = runLine('AI 正在逐条审查(对照 ' + regs.length + ' 条法规)…');
+    creepTo(60);
     const result = await runReview({ docText: state.doc.text, regs, mode: state.mode, settings, round: state.round });
     setLine(l3, 'done', '初审完成,发现 ' + (result.findings || []).length + ' 个风险点');
+    snapBar(64);
 
     // 3b) 查漏复审(第二遍:专找遗漏)
     const lc = runLine('正在二次查漏复审(专找被忽略的遗漏)…');
+    creepTo(90);
     try {
       const extra = await reviewCritic({ docText: state.doc.text, regs, existing: result.findings, settings, round: state.round });
       const before = (result.findings || []).length;
@@ -266,6 +300,7 @@ async function runAutoFlow() {
     } catch (e) {
       setLine(lc, 'err', '复审跳过(不影响初审结果):' + (e.message || e));
     }
+    snapBar(92);
     state.result = result;
 
     // 4) 渲染报告
@@ -274,10 +309,13 @@ async function runAutoFlow() {
     applyEmptyState(result);
     renderCoverage(result.coverage);
     wireExportButton();
+    snapBar(99);
+    progDone();
     gotoStep(3);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (e) {
     runLine('出错:' + (e.message || String(e)), 'err');
+    progDone();
     $('#btn-prev').style.visibility = 'visible';
   }
 }
