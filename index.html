@@ -38,23 +38,16 @@
     </div>
     <p class="settings-hint"><i class="ti ti-lock" aria-hidden="true"></i> 仅存于本浏览器(localStorage),平台不上传、不留存。</p>
     <div class="settings-grid">
-      <label>AI 模型接口地址
+      <label>AI 模型接口地址(DeepSeek)
         <input id="set-endpoint" type="text" placeholder="https://api.deepseek.com/v1/chat/completions" />
       </label>
       <label>模型名称
-        <input id="set-model" type="text" placeholder="deepseek-chat" />
+        <input id="set-model" type="text" placeholder="deepseek-reasoner" />
       </label>
-      <label>AI 模型 API Key
+      <label>AI 模型 API Key(DeepSeek)
         <input id="set-model-key" type="password" placeholder="sk-..." autocomplete="off" />
       </label>
-      <label>联网搜索服务(可选)
-        <select id="set-search-provider">
-          <option value="tavily">Tavily</option>
-          <option value="serper">Serper (google)</option>
-          <option value="bing">Bing Web Search</option>
-        </select>
-      </label>
-      <label>联网搜索 API Key(可选,留空仅用内置法规库)
+      <label>联网搜索 API Key(Tavily · 可选,留空仅用内置法规库)
         <input id="set-search-key" type="password" placeholder="不填也能审查;补搜新规时才用到" autocomplete="off" />
       </label>
       <label>转发前缀(可选,绕过 CORS 时用)
@@ -67,7 +60,6 @@
       <div class="key-help-body">
         <p class="kh-line"><b>① AI 模型 Key(审查用)</b> — 默认用 DeepSeek:打开 <a href="https://platform.deepseek.com" target="_blank" rel="noopener">platform.deepseek.com</a> → 注册登录 → 左侧「API Keys」→ 点「创建 API key」→ 复制 <code>sk-</code> 开头的字符串,填到上方「AI 模型 API Key」。(需在 DeepSeek 账户里充值少量额度才能调用)</p>
         <p class="kh-line"><b>② 联网搜索 Key(找法规用)</b> — 默认用 Tavily(注册即送免费额度):打开 <a href="https://app.tavily.com" target="_blank" rel="noopener">app.tavily.com</a> → 用邮箱或 Google 免费注册 → 登录后控制台首页就能看到 <code>tvly-</code> 开头的 API Key → 复制,填到「联网搜索 API Key」。</p>
-        <p class="kh-line kh-alt">想换其他搜索服务?<a href="https://serper.dev" target="_blank" rel="noopener">Serper</a>(谷歌结果,有免费额度)或 Bing Web Search(在微软 Azure 门户申请)也行,去各自后台拿 Key 后,记得把上方「联网搜索服务」切到对应项。</p>
         <p class="kh-line kh-note"><i class="ti ti-shield-lock" aria-hidden="true"></i> 你填的所有 Key 只存在你自己的浏览器里,本站不上传、不保存。</p>
       </div>
     </details>

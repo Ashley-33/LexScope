@@ -56,7 +56,6 @@ function loadSettingsToForm() {
   $('#set-endpoint').value = s.modelEndpoint;
   $('#set-model').value = s.modelName;
   $('#set-model-key').value = s.modelKey;
-  $('#set-search-provider').value = s.searchProvider;
   $('#set-search-key').value = s.searchKey;
   $('#set-proxy').value = s.proxy;
 }
@@ -80,7 +79,7 @@ function bindSettings() {
       modelEndpoint: $('#set-endpoint').value.trim(),
       modelName: $('#set-model').value.trim(),
       modelKey: $('#set-model-key').value.trim(),
-      searchProvider: $('#set-search-provider').value,
+      searchProvider: 'tavily',
       searchKey: $('#set-search-key').value.trim(),
       proxy: $('#set-proxy').value.trim(),
     });

@@ -22,7 +22,7 @@ export function getSettings() {
     modelEndpoint: localStorage.getItem(LS.modelEndpoint) || DEFAULTS.modelEndpoint,
     modelName: localStorage.getItem(LS.modelName) || DEFAULTS.modelName,
     modelKey: localStorage.getItem(LS.modelKey) || '',
-    searchProvider: localStorage.getItem(LS.searchProvider) || DEFAULTS.searchProvider,
+    searchProvider: 'tavily', // 已写死为 Tavily(设置里不再让用户选)
     searchKey: localStorage.getItem(LS.searchKey) || '',
     proxy: localStorage.getItem(LS.proxy) || '',
   };
