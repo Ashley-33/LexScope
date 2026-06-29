@@ -104,8 +104,18 @@ function gotoStep(n) {
   $('#step-3').hidden = (n !== 3);
   document.querySelectorAll('.stepper .si').forEach((si) => {
     const s = +si.dataset.s;
-    si.classList.toggle('on', s === n);
-    si.classList.toggle('done', s < n);
+    const on = s === n, done = s < n;
+    si.classList.toggle('on', on);
+    si.classList.toggle('done', done);
+    // 副标:当前步→当前步骤、已过步→已完成、未到步→各自描述
+    const sub = si.querySelector('.sub');
+    if (sub) sub.textContent = on ? '当前步骤' : (done ? '已完成' : (si.dataset.desc || ''));
+    // 图标:已完成步换成对勾,否则用本步原图标
+    const ic = si.querySelector('.dot i');
+    if (ic) {
+      if (!ic.dataset.orig) ic.dataset.orig = ic.className;
+      ic.className = done ? 'ti ti-check' : ic.dataset.orig;
+    }
   });
   const prev = $('#btn-prev'), next = $('#btn-next');
   if (n === 1) {

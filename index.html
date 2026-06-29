@@ -142,17 +142,25 @@
 
   <!-- 步骤条 -->
   <nav class="stepper" aria-label="流程步骤">
-    <div class="si on" data-s="1"><span class="dot">1</span><span class="lbl">上传制度</span></div>
+    <div class="si on" data-s="1" data-desc="上传待审制度">
+      <span class="dot"><i class="ti ti-upload" aria-hidden="true"></i></span>
+      <span class="lbl">上传制度</span><span class="sub">当前步骤</span>
+    </div>
     <span class="bar"></span>
-    <div class="si" data-s="2"><span class="dot">2</span><span class="lbl">分析</span></div>
+    <div class="si" data-s="2" data-desc="AI 自动审查">
+      <span class="dot"><i class="ti ti-search" aria-hidden="true"></i></span>
+      <span class="lbl">分析</span><span class="sub">AI 自动审查</span>
+    </div>
     <span class="bar"></span>
-    <div class="si" data-s="3"><span class="dot">3</span><span class="lbl">审查报告</span></div>
+    <div class="si" data-s="3" data-desc="生成完整报告">
+      <span class="dot"><i class="ti ti-file-description" aria-hidden="true"></i></span>
+      <span class="lbl">审查报告</span><span class="sub">生成完整报告</span>
+    </div>
   </nav>
 
   <main>
     <!-- 步骤1:上传 -->
     <section id="step-1" class="step" data-step="1">
-      <div class="step-title"><p class="step-eyebrow">第 1 步 / 共 3 步</p><h1>上传制度</h1></div>
       <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="上传制度文件">
         <i class="ti ti-cloud-upload dz-icon" aria-hidden="true"></i>
         <p class="dz-main">点击或拖拽上传制度文件</p>
@@ -170,7 +178,6 @@
 
     <!-- 步骤2:分析(自动流水线进度) -->
     <section id="step-2" class="step" data-step="2" hidden>
-      <div class="step-title"><p class="step-eyebrow">第 2 步 / 共 3 步</p><h1>智能分析</h1></div>
       <div class="analyzing-head"><i class="ti ti-scan-eye spin-slow" aria-hidden="true"></i> 正在分析与审查……</div>
       <div class="run-progress"><div class="run-bar" id="run-bar"></div></div>
       <div class="run-meta" id="run-meta"></div>
@@ -179,7 +186,6 @@
 
     <!-- 步骤3:审查报告(report.js 渲染) -->
     <section id="step-3" class="step" data-step="3" hidden>
-      <div class="step-title"><p class="step-eyebrow">第 3 步 / 共 3 步</p><h1>审查报告</h1></div>
       <div id="review-basis"></div>
       <div id="report-root"></div>
       <div id="coverage"></div>
